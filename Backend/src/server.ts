@@ -1,7 +1,7 @@
 import { buildApp } from "./app.js";
 import { envConfig } from "./config/envConfig.js";
 
-const start = async () => {
+async function start() {
     try {
         const app = buildApp();
         const PORT = envConfig.PORT;

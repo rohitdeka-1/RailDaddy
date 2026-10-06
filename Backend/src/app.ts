@@ -1,11 +1,19 @@
 import Fastify from "fastify";
+import prismaPlugin from "./plugins/prisma.js";
 
-export const buildApp = () => {
+import authPlugin from "./plugins/auth.js";
+import usersRoutes from "./modules/users/routes/users.routes.js";
+
+export function buildApp() {
     const app = Fastify({
-        logger: true,
+        logger: { redact: ["req.headers.authorization"] },
     })
 
-    app.get("/health", async () => {
+    app.register(prismaPlugin);
+    app.register(authPlugin);
+    app.register(usersRoutes, { prefix: "/api/v1/users" });
+
+    app.get("/health", async function healthCheck() {
         return {
             status: "ok",
             service: "RailDaddy-Backend"

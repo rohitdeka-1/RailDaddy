@@ -10,8 +10,8 @@ test('profile endpoints validate input and isolate users by verified identity', 
   const records = new Map<string, User>();
   const repository: UserRepository = {
     async findByCognitoSub(sub) { return records.get(sub) ?? null; },
-    async save(sub, displayName) {
-      const user = { id: sub, cognitoSub: sub, displayName, createdAt: new Date(), updatedAt: new Date() };
+    async save(sub, data) {
+      const user = { id: sub, cognitoSub: sub, displayName: data.displayName, email: data.email ?? null, preferences: data.preferences ?? null, createdAt: new Date(), updatedAt: new Date() };
       records.set(sub, user);
       return user;
     },

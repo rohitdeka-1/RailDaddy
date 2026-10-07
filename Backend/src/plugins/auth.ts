@@ -3,6 +3,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { envConfig } from "../config/envConfig.js";
 
+import { UsersService } from "../modules/users/services/users.service.js";
+
 interface AuthenticatedUser {
   cognitoSub: string;
 }
@@ -24,6 +26,7 @@ function sendUnauthorized(reply: FastifyReply): void {
 }
 
 async function authPlugin(app: FastifyInstance) {
+
   const userPoolId = envConfig.COGNITO_USER_POOL_ID;
   const clientId = envConfig.COGNITO_CLIENT_ID;
   if (!userPoolId || !clientId) {
@@ -35,6 +38,8 @@ async function authPlugin(app: FastifyInstance) {
     clientId: clientId,
     tokenUse: "access",
   });
+
+  const usersService = new UsersService();
 
   // Each request starts without an authenticated user.
   app.decorateRequest("user", null);
@@ -62,16 +67,21 @@ async function authPlugin(app: FastifyInstance) {
       return;
     }
 
+    let cognitoSub: string;
+
     try {
       const claims = await verifier.verify(token);
-
-      // Only trust the identity after Cognito token verification succeeds.
-      request.user = {
-        cognitoSub: claims.sub,
-      };
+      cognitoSub = claims.sub;
     } catch {
       sendUnauthorized(reply);
+      return;
     }
+
+    // Database failures must remain server errors, not authentication errors.
+    const user = await usersService.ensureUserExists(cognitoSub);
+    request.user = {
+      cognitoSub: user.cognitoSub,
+    };
   }
 
   app.decorate("authenticate", authenticate);

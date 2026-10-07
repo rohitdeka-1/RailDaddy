@@ -9,13 +9,18 @@ export class UsersService {
     this.repository = new UsersRepository();
   }
 
+  async ensureUserExists(cognitoSub: string): Promise<User> {
+    const user = await this.repository.findOrCreate(cognitoSub);
+    return user;
+  }
+
   async getProfile(cognitoSub: string): Promise<User | null> {
     const user = await this.repository.findByCognitoSub(cognitoSub);
     return user;
   }
 
   async saveProfile(cognitoSub: string, input: UpdateProfileInput): Promise<User> {
-    const user = await this.repository.save(cognitoSub, input.displayName);
+    const user = await this.repository.save(cognitoSub, input);
     return user;
   }
 }

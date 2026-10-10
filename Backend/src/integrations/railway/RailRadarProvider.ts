@@ -1,6 +1,7 @@
 import { envConfig } from "../../config/envConfig.js";
 
 export class RailRadarProvider {
+  
   private baseUrl = "https://api.railradar.in/v1";
 
   private get headers() {

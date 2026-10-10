@@ -14,4 +14,3 @@ export default async function usersRoutes(app: FastifyInstance) {
     return controller.putMe(request, reply);
   });
 }
-  

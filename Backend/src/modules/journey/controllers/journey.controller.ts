@@ -13,9 +13,9 @@ export class JourneyController {
     const parsed = journeySearchSchema.safeParse(request.query);
 
     if (!parsed.success) {
-      return reply.status(400).send({ 
-        message: "Invalid search parameters", 
-        issues: parsed.error.issues 
+      return reply.status(400).send({
+        message: "Invalid search parameters",
+        issues: parsed.error.issues
       });
     }
 
@@ -27,4 +27,8 @@ export class JourneyController {
       return reply.status(500).send({ message: "Failed to search journeys" });
     }
   }
+
+
+
 }
+

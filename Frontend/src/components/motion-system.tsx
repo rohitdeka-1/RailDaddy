@@ -96,7 +96,7 @@ export function MotionSystem() {
       if (disposed || preference.matches || generation !== scrollGeneration) return;
       const lenis = new Lenis({
         autoRaf: true,
-        duration: motionTokens.duration.hero,
+        duration: 0.5,
         easing: expoEase,
         smoothWheel: true,
         syncTouch: false,

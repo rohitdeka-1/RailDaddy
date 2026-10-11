@@ -26,12 +26,11 @@ export function useHeroDepth(ref: RefObject<HTMLDivElement | null>) {
       const bounds = stage.getBoundingClientRect();
       const cardBottom = card.getBoundingClientRect().bottom - bounds.top;
       const trackHeight = mobile.matches ? 60 : 84;
-      // On phones the sticky button covers the bottom 88px of the viewport.
       const bottomLimit = mobile.matches ? Math.min(bounds.height, window.innerHeight - bounds.top - 88) : bounds.height;
-      const gap = bottomLimit - cardBottom;
-      // Use only existing empty space; never move or resize the booking experience.
-      track.dataset['space'] = String(gap >= trackHeight + 32);
-      track.style.setProperty('--night-track-top', `${cardBottom + Math.max(32, (gap - trackHeight) / 2)}px`);
+      const gap = Math.max(0, bottomLimit - cardBottom);
+      track.dataset['space'] = 'true';
+      const trackTop = gap >= trackHeight ? cardBottom + (gap - trackHeight) / 2 : cardBottom + 16;
+      track.style.setProperty('--night-track-top', `${trackTop}px`);
     }
     function clearHints() {
       photo?.style.removeProperty('will-change'); headline?.style.removeProperty('will-change');
@@ -40,16 +39,13 @@ export function useHeroDepth(ref: RefObject<HTMLDivElement | null>) {
     function update() {
       frame = 0;
       if (preference.matches || mobile.matches || !visible || document.hidden) return;
-      const bounds = stage?.getBoundingClientRect();
-      if (!bounds || !photo || !headline) return;
-      const state = heroScrollState(-bounds.top, bounds.height);
-      photo.style.willChange = 'transform'; headline.style.willChange = 'transform, opacity';
-      // Keep scroll depth inside the photo's six-percent overscan at rest/zoom end.
-      photo.style.transform = `translateY(${Math.min(state.photoY, bounds.height * 0.05)}px)`;
+      if (!photo || !headline || !stage) return;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const stageHeight = stage.clientHeight || 700;
+      const state = heroScrollState(scrollY, stageHeight);
+      photo.style.transform = `translate3d(0, ${Math.min(state.photoY, stageHeight * 0.05)}px, 0)`;
       headline.style.transform = `scale(${state.headlineScale})`;
       headline.style.opacity = String(state.headlineOpacity);
-      clearTimeout(idleTimer);
-      idleTimer = window.setTimeout(() => { photo.style.removeProperty('will-change'); headline.style.removeProperty('will-change'); }, 140);
     }
     function scroll() { if (!frame && visible && !mobile.matches && !preference.matches && !document.hidden) frame = requestAnimationFrame(update); }
     function sync() {
@@ -89,7 +85,9 @@ export function useHeroDepth(ref: RefObject<HTMLDivElement | null>) {
     }
     // Both the image and primary UI must be ready before decorative work starts.
     function checkReady() {
-      if (ready || !root?.querySelector('.hero-loaded') || root.dataset['homeEntrance'] !== 'complete') return;
+      if (ready) return;
+      const isLoaded = !!root?.querySelector('.hero-loaded');
+      if (!isLoaded) return;
       ready = true; configure();
     }
     const loadObserver = new MutationObserver(checkReady);

@@ -42,7 +42,7 @@ export function useAnimationBudget() {
       observed.forEach(element => { if (!element.isConnected) { observer.unobserve(element); observed.delete(element); visibility.delete(element); } });
       paused.forEach(animation => { if (!animations.includes(animation)) paused.delete(animation); });
     }
-    const timer = window.setInterval(sync, 120);
+    const timer = window.setInterval(sync, 1000);
     document.addEventListener("visibilitychange", sync);
     mobile.addEventListener("change", sync);
     sync();

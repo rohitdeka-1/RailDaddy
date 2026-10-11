@@ -5,9 +5,7 @@ import { addDays, format, isSameDay, nextSaturday, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DatePanel } from "@/components/date-panel";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import heroAvif from "@/assets/midnight-lake.avif.asset.json";
-import heroWebp from "@/assets/midnight-lake.webp.asset.json";
-import heroPlaceholder from "@/assets/midnight-lake-placeholder.webp.asset.json";
+import heroJpg from "@/assets/midnight-lake.jpg";
 import { useHomeEntrance } from "@/hooks/use-home-entrance";
 import { HeroAtmosphere, useHeroDepth } from "@/components/hero-depth";
 import { AnimatePresence, LayoutGroup, motion, DrawnCheck, SelectionMark, RollingNumber, SearchAction, SearchCalendarDay, useSearchMicroMotion } from "@/components/search-motion";
@@ -20,7 +18,7 @@ import { ThemeToggle } from "@/components/global-polish";
 
 export const Route = createFileRoute("/")({
   head: () => ({ links: [
-    { rel: "preload", as: "image", href: heroAvif.url, type: "image/avif", fetchPriority: "high" },
+    { rel: "preload", as: "image", href: heroJpg, type: "image/jpeg", fetchPriority: "high" },
   ], meta: [
     { title: "Rail Daddy — Find train routes & book tickets across India" },
     { name: "description", content: "Rail Daddy shows you available train routes and tickets: pick where from, where to, when, and your class." },
@@ -28,8 +26,8 @@ export const Route = createFileRoute("/")({
     { property: "og:description", content: "Available train routes and tickets in one place: route, date, class and passengers." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
-    { property: "og:image", content: heroWebp.url },
-    { name: "twitter:image", content: heroWebp.url },
+    { property: "og:image", content: heroJpg },
+    { name: "twitter:image", content: heroJpg },
   ] }),
   component: Index,
 });
@@ -381,11 +379,17 @@ function Index() {
         <section className="journey-stage" aria-label="Find your train">
           <div className={`stage-parallax${heroLoaded ? " hero-loaded" : ""}`} aria-hidden="true">
             <div className="hero-photo-depth">
-            <img src={heroPlaceholder.url} width={1920} height={1088} alt="" className="lights-backdrop hero-placeholder" />
-            <picture>
-              <source srcSet={heroAvif.url} type="image/avif" />
-              <img ref={heroRef} src={heroWebp.url} width={1920} height={1088} alt="" className="lights-backdrop hero-photo" fetchPriority="high" decoding="async" onLoad={() => setHeroLoaded(true)} />
-            </picture>
+              <img
+                ref={heroRef}
+                src={heroJpg}
+                width={1920}
+                height={1088}
+                alt=""
+                className="lights-backdrop hero-photo"
+                fetchPriority="high"
+                decoding="async"
+                onLoad={() => setHeroLoaded(true)}
+              />
             </div>
           </div>
           <div className="stage-shade" />

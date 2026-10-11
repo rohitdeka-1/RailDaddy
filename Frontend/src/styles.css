@@ -1277,15 +1277,21 @@ body { font-size: var(--text-body); line-height: 1.5; }
 }
 .station-field.sheet-open { animation: none !important; }
 .date-dialog.date-dialog { animation: none !important; }
-.motion-ready *, .motion-ready *::before, .motion-ready *::after {
-  transition-property: transform, opacity, translate;
-  transition-duration: var(--motion-standard);
-  transition-timing-function: var(--motion-ease-transition);
-}
 .motion-ready :is(button, a[href], input, select, label[for], summary, [role="button"]) {
   /* Framer's springs own interaction transforms; avoid a second CSS easing pass. */
-  transition-property: opacity;
+  transition-property: opacity, background-color, border-color, color;
   transition-duration: var(--motion-micro);
+}
+.stage-parallax,
+.stage-parallax *,
+.hero-photo-depth,
+.hero-photo-depth *,
+.hero-content h1,
+.hero-content h1 * {
+  transition: none !important;
+}
+.hero-photo-depth {
+  will-change: transform;
 }
 .motion-ready .booking-console .swap-button,
 .motion-ready .booking-console .swap-button:hover {
@@ -1518,7 +1524,7 @@ html.lenis, html.lenis body { height: auto; }
 .hero-dark .site-header { width: min(1200px, calc(100% - 48px)); min-width: 0; }
 .railway-app:has(> .hero-dark) > .content-light { padding-inline: 24px; }
 .hero-dark .journey-stage {
-  flex: 1; min-height: min-content; min-width: 0; padding: 0;
+  flex: 1; min-height: 600px; min-width: 0; padding: 0 0 96px;
   margin-block: var(--space-3); justify-content: center; align-items: center;
 }
 .hero-dark .hero-content { width: min(1200px, calc(100% - 48px)); min-width: 0; }

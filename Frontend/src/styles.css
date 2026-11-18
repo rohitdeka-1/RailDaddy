@@ -794,16 +794,18 @@ h1 .line:first-child > span { color: var(--foreground); }
   .footer-top { order: 1; flex-direction: column; gap: 14px; }
   .footer-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
   .scenic-link { order: 2; }
-  .trust-row { order: 3; flex-wrap: nowrap; }
+  .trust-row { order: 3; }
   .footer-note { order: 4; }
   .footer-copy { order: 5; }
   .footer-bottom { display: contents; }
 
-  .station-field.sheet-open { position: fixed; inset: 0; z-index: 60; height: 100svh; border-radius: 0 !important; border: 0; padding: 20px 18px; background: var(--background); display: flex; flex-direction: column; gap: 10px; animation: sheet-up .32s cubic-bezier(.22,1,.36,1); }
-  .station-field.sheet-open input { height: 56px; border-radius: var(--radius-lg-ui); padding: 0 16px; background: var(--card); border: 1px solid var(--primary); font-size: 20px; }
+  body:has(.station-field.sheet-open, .date-sheet, .prefs-sheet-root) { overflow: hidden; }
+  .station-field.sheet-open { position: fixed; inset: var(--station-sheet-top, 0px) 0 auto; z-index: 60; height: var(--station-sheet-height, 100dvh); border-radius: 0 !important; border: 0; padding: 20px 18px; background: var(--background); display: flex; flex-direction: column; gap: 10px; animation: sheet-up .32s cubic-bezier(.22,1,.36,1); }
+  .station-field.sheet-open input { flex: none; height: 56px; border-radius: var(--radius-lg-ui); padding: 0 16px; background: var(--card); border: 1px solid var(--primary); font-size: 20px; }
   .station-field.sheet-open .field-hint { display: none; }
   .station-field.sheet-open .sheet-close { display: grid; place-items: center; position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; background: var(--secondary); color: var(--foreground); }
-  .station-field.sheet-open .station-suggestions { position: static; flex: 1; overflow-y: auto; border: 0; background: transparent; box-shadow: none; padding: 4px 0; }
+  .station-field:not(.sheet-open) .station-suggestions { visibility: hidden; }
+  .station-field.sheet-open .station-suggestions { position: static; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; border: 0; background: transparent; box-shadow: none; padding: 4px 0; }
   .station-field.sheet-open .station-suggestions button { height: 52px; font-size: 16px; border-bottom: 1px solid var(--border); border-radius: var(--radius-sm-ui); }
 
   .date-dialog.date-dialog { left: 0; right: 0; top: auto; bottom: 0; translate: none; transform: none; width: 100%; max-width: 100%; height: 100svh; max-height: 100svh; border-radius: 0; overflow-y: auto; display: flex; flex-direction: column; animation: sheet-up .32s cubic-bezier(.22,1,.36,1); }
@@ -1233,7 +1235,7 @@ body { font-size: var(--text-body); line-height: 1.5; }
   .flow-step { flex-direction: column; gap: 4px; font-size: 12px; position: relative; }
   .flow-connector { position: absolute; top: 15px; left: calc(50% + 20px); right: calc(-50% + 20px); margin: 0; }
   .flow-label { font-size: 12px; }
-  .flow-main { padding: 4px 16px 120px; }
+  .flow-main { padding: 4px 16px calc(120px + env(safe-area-inset-bottom)); }
   .flow-title { font-size: 28px; }
   .flow-card, .train-card { padding: 16px; }
   .class-offers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1249,7 +1251,17 @@ body { font-size: var(--text-body); line-height: 1.5; }
   .fare-bar-inner > div { display: flex; flex-direction: column; min-width: 0; }
   .fare-bar-note { font-size: 13px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .fare-bar-total { font-size: 22px; font-weight: 700; }
-  .fare-bar-inner .flow-cta { flex: none; height: 52px; }
+  .fare-bar-inner .flow-cta { flex: none; height: 52px; padding-inline: clamp(12px, 4vw, 24px); }
+  .flow-trip, .train-name { overflow-wrap: anywhere; }
+  .train-head, .seat-legend, .offer-top { flex-wrap: wrap; }
+  .train-head { gap: 8px; }
+  .offer-chip { min-width: 0; padding-inline: 8px; white-space: normal; }
+  .train-times { grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; }
+  .train-duration { text-align: center; }
+}
+
+@media (max-width: 380px) {
+  .coach { grid-template-columns: 1fr; }
 }
 
 /* Mobile-first refinements */
@@ -1465,22 +1477,6 @@ html.lenis, html.lenis body { height: auto; }
 }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
-/* Global polish uses semantic ink, not the primary-action accent. */
-:root { --cursor-ink: oklch(1 0 0); }
-.desktop-cursor { position: fixed; inset: 0; z-index: 10000; pointer-events: none; mix-blend-mode: difference; opacity: 0; }
-@media (hover: hover) and (pointer: fine) {
-  .custom-cursor-active .desktop-cursor { opacity: 1; }
-}
-@media not all and (hover: hover) and (pointer: fine) {
-  .desktop-cursor { display: none; }
-}
-.cursor-dot, .cursor-ring { position: absolute; top: 0; left: 0; transition: none !important; }
-.cursor-dot::after { content: ''; position: absolute; width: var(--cursor-dot-size, 5px); height: var(--cursor-dot-size, 5px); border-radius: 50%; background: var(--cursor-ink); transform: translate(-50%, -50%); }
-.cursor-ring > span { display: block; width: var(--cursor-ring-size, 28px); height: var(--cursor-ring-size, 28px); border: 1px solid var(--cursor-ink); border-radius: 50%; opacity: .65; transform: translate(-50%, -50%) scale(1); transition: transform var(--motion-standard) var(--motion-ease-entrance); }
-.cursor-ring.cursor-over-control > span { transform: translate(-50%, -50%) scale(var(--cursor-expanded-scale, 1.5714)); }
-@media (min-width: 761px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .custom-cursor-active, .custom-cursor-active :is(button, a, select, label, summary, [role="button"]) { cursor: none !important; }
-}
 .theme-toggle .theme-glyph { width: 20px; height: 20px; overflow: visible; transition: none !important; }
 .theme-revealing::view-transition-old(root), .theme-revealing::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 .theme-revealing::view-transition-old(root) { z-index: 1; }
@@ -1488,7 +1484,6 @@ html.lenis, html.lenis body { height: auto; }
 .site-footer :is(.footer-links a, .scenic-link) { position: relative; text-decoration: none; }
 .site-footer :is(.footer-links a, .scenic-link)::after { content: ''; position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left center; transition: transform var(--motion-standard) var(--motion-ease-entrance); }
 .site-footer :is(.footer-links a, .scenic-link):is(:hover, :focus-visible)::after { transform: scaleX(1); }
-@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse), (max-width: 760px) { .desktop-cursor { display: none; } }
 .city-marquee { overflow: hidden; }
 .city-marquee .marquee-track { animation: none; }
 .city-marquee .marquee-run { flex-shrink: 0; }
@@ -1613,9 +1608,14 @@ html.lenis, html.lenis body { height: auto; }
 .dp-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 280px; overflow-y: auto; }
 .dp-month { min-height: 40px; border-radius: 12px; background: var(--rd-white); border: 1px solid color-mix(in oklab, var(--rd-indigo) 12%, transparent); color: var(--rd-indigo); font-size: 13px; font-weight: 600; cursor: pointer; }
 .dp-month.on { background: var(--rd-marigold); border-color: var(--rd-marigold); }
-.date-sheet { top: auto !important; left: 0 !important; right: 0; bottom: 0; width: 100%; max-width: none; border-radius: 20px 20px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); touch-action: none; }
-.date-sheet .dp-handle { display: block; width: 40px; height: 4px; margin: 4px auto 14px; border-radius: 999px; background: color-mix(in oklab, var(--rd-indigo) 25%, transparent); }
-.date-sheet .dp-day { width: 44px; height: 44px; }
+.date-sheet { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-width: none; max-height: calc(100dvh - 12px); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; padding: 0 0 env(safe-area-inset-bottom); }
+.dp-grip { flex: none; display: grid; place-items: center; height: 30px; touch-action: none; }
+.dp-grip .dp-handle { width: 40px; height: 4px; border-radius: 999px; background: color-mix(in oklab, var(--rd-indigo) 25%, transparent); }
+.dp-sheet-content { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 2px 16px 20px; }
+.date-sheet .dp-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.date-sheet .dp-day { width: min(100%, 44px); height: 44px; }
+.date-sheet .dp-chips { flex-wrap: wrap; }
+.date-sheet :is(.dp-chip, .dp-month) { min-height: 44px; }
 
 /* ---- Compact phone search card: one route block, one date row ---- */
 .route-block, .date-row { display: contents; }
@@ -1667,6 +1667,7 @@ html.lenis, html.lenis body { height: auto; }
   .hero-dark .booking-console .date-row .date-value-short {
     display: inline-flex; align-items: center; gap: 8px; min-width: 0;
     font-size: 17px; font-weight: 700; color: var(--rd-indigo);
+    white-space: normal; line-height: 1.15; text-align: left;
   }
   .hero-dark .booking-console .date-row .date-value-short svg { flex: none; color: var(--rd-muted); }
   .hero-dark .booking-console .date-row .date-button.field-invalid { background: color-mix(in oklch, var(--error) 6%, var(--rd-white)); box-shadow: none; }
@@ -1674,7 +1675,7 @@ html.lenis, html.lenis body { height: auto; }
   .hero-dark .booking-console .date-row:has(.field-invalid) { border-color: var(--error); }
   .hero-dark .booking-console .date-quick { display: flex; flex: none; gap: 6px; }
   .hero-dark .booking-console .date-quick button {
-    height: 30px; padding: 0 9px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--rd-indigo) 20%, transparent);
+    min-height: 44px; padding: 0 9px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--rd-indigo) 20%, transparent);
     background: var(--rd-cream); color: var(--rd-indigo); font: 600 12px var(--font-body); cursor: pointer;
   }
   .hero-dark .booking-console .date-quick button.on { background: var(--rd-marigold); border-color: var(--rd-marigold); }
@@ -1694,6 +1695,7 @@ html.lenis, html.lenis body { height: auto; }
 .prefs-sheet-backdrop { position: absolute; inset: 0; border: 0; background: oklch(0 0 0 / 55%); cursor: default; }
 .prefs-sheet {
   position: absolute; left: 0; right: 0; bottom: 0;
+  max-height: calc(100dvh - 12px); overflow-y: auto; overscroll-behavior-y: contain;
   background: var(--rd-cream); color: var(--rd-indigo);
   border-radius: 20px 20px 0 0; padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -18px 50px oklch(0 0 0 / 35%);
@@ -1715,12 +1717,12 @@ html.lenis, html.lenis body { height: auto; }
 @media (max-width: 640px) {
   .prefs-summary {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    height: 48px; padding: 0 16px; border-radius: 12px;
+    min-height: 48px; padding: 6px 16px; border-radius: 12px;
     background: var(--rd-white); border: 1px solid var(--border);
     color: var(--rd-indigo); font: inherit; font-size: 14px; font-weight: 600;
     cursor: pointer;
   }
-  .prefs-summary-text { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  .prefs-summary-text { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; text-align: left; }
   .prefs-dot { width: 3px; height: 3px; border-radius: 999px; background: var(--rd-muted); flex: none; }
   .prefs-summary svg { color: var(--rd-muted); flex: none; }
   .booking-console .booking-controls .controls-panel { display: none; }
@@ -1744,7 +1746,7 @@ html.lenis, html.lenis body { height: auto; }
 @media (max-width: 640px) {
   .site-header .ai-icon-btn {
     position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 6px;
-    width: auto; height: 36px; padding: 0 14px; border-radius: 999px;
+    width: auto; height: 44px; padding: 0 14px; border-radius: 999px;
     border: 1px solid var(--rd-marigold); background: color-mix(in oklch, var(--rd-marigold) 8%, transparent);
     color: var(--foreground); font: inherit; font-size: 14px; font-weight: 600;
     box-shadow: 0 0 14px color-mix(in oklch, var(--rd-marigold) 28%, transparent);

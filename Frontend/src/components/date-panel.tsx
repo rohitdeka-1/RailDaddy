@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion, useDragControls, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { addDays, addMonths, format, isBefore, isSameDay, isSameMonth, nextSaturday, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 
@@ -29,6 +29,7 @@ export function quickDates(now = new Date()) {
 
 export function DatePanel({ open, anchor, value, onSelect, onClose }: Props) {
   const reduced = useReducedMotion();
+  const dragControls = useDragControls();
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [mobile, setMobile] = useState(false);
@@ -42,7 +43,7 @@ export function DatePanel({ open, anchor, value, onSelect, onClose }: Props) {
 
   useEffect(() => {
     setMounted(true);
-    const mq = window.matchMedia("(max-width: 639px)");
+    const mq = window.matchMedia("(max-width: 760px)");
     const sync = () => setMobile(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -151,9 +152,11 @@ export function DatePanel({ open, anchor, value, onSelect, onClose }: Props) {
       {open && (mobile ? (
         <motion.div key="sheet" ref={panelRef} className="date-panel date-sheet" role="dialog" aria-label="Choose travel date" data-motion-owned="true" data-lenis-prevent
           initial={reduced ? false : { y: "100%" }} animate={{ y: 0 }} exit={reduced ? { opacity: 0 } : { y: "100%" }} transition={{ duration: reduced ? 0 : 0.22, ease }}
-          drag={reduced ? false : "y"} dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.6 }} onDragEnd={(_, info) => { if (info.offset.y > 80) onClose(); }}>
-          <span className="dp-handle" aria-hidden="true" />
-          {content}
+          drag={reduced ? false : "y"} dragControls={dragControls} dragListener={false} dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.6 }} onDragEnd={(_, info) => { if (info.offset.y > 80) onClose(); }}>
+          <div className="dp-grip" aria-hidden="true" onPointerDown={(event) => { if (!reduced) dragControls.start(event); }}>
+            <span className="dp-handle" />
+          </div>
+          <div className="dp-sheet-content">{content}</div>
         </motion.div>
       ) : (
         <motion.div key="panel" ref={panelRef} className={pos.up ? "date-panel up" : "date-panel"} role="dialog" aria-label="Choose travel date" data-motion-owned="true" data-lenis-prevent

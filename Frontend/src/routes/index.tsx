@@ -149,6 +149,26 @@ type StationFieldProps = {
 
 function StationField({ id, label, hint, errorText, placeholder, compactPlaceholder, compact, value, invalid, recent, onChange }: StationFieldProps) {
   const [open, setOpen] = useState(false);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const field = fieldRef.current;
+    const viewport = window.visualViewport;
+    if (!open || !field || !viewport) return;
+    // Keep the fixed picker within the area above the on-screen keyboard.
+    const syncViewport = () => {
+      field.style.setProperty("--station-sheet-height", `${viewport.height}px`);
+      field.style.setProperty("--station-sheet-top", `${viewport.offsetTop}px`);
+    };
+    syncViewport();
+    viewport.addEventListener("resize", syncViewport);
+    viewport.addEventListener("scroll", syncViewport);
+    return () => {
+      viewport.removeEventListener("resize", syncViewport);
+      viewport.removeEventListener("scroll", syncViewport);
+      field.style.removeProperty("--station-sheet-height");
+      field.style.removeProperty("--station-sheet-top");
+    };
+  }, [open]);
   const reduced = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(-1);
   const query = value.trim();
@@ -165,6 +185,7 @@ function StationField({ id, label, hint, errorText, placeholder, compactPlacehol
 
   function choose(station: Station) {
     onChange(station.name);
+    if (window.matchMedia("(max-width: 760px)").matches) fieldRef.current?.querySelector("input")?.blur();
     setOpen(false);
     setActiveIndex(-1);
   }
@@ -189,7 +210,7 @@ function StationField({ id, label, hint, errorText, placeholder, compactPlacehol
 
   let running = -1;
   return (
-    <div className={`station-field ${id}-field pop${invalid ? " field-invalid" : ""}${open ? " sheet-open" : ""}`}>
+    <div ref={fieldRef} className={`station-field ${id}-field pop${invalid ? " field-invalid" : ""}${open ? " sheet-open" : ""}`}>
       <span className="field-focus-glow" aria-hidden="true" /><label htmlFor={id}><MapPin size={15} /> {label}</label>
       <span className="row-pin" aria-hidden="true"><MapPin size={16} /></span>
       <button type="button" className="sheet-close" aria-label="Close station search" onMouseDown={(event) => event.preventDefault()} onClick={() => { setOpen(false); (document.activeElement as HTMLElement | null)?.blur(); }}><X size={20} /></button>
@@ -489,7 +510,7 @@ function Index() {
       </footer>
       </section>
       {prefsOpen && (
-        <div className="prefs-sheet-root" role="dialog" aria-modal="true" aria-label="Class, passengers and quota">
+        <div className="prefs-sheet-root" data-motion-owned="true" role="dialog" aria-modal="true" aria-label="Class, passengers and quota">
           <button type="button" className="prefs-sheet-backdrop" aria-label="Close" onClick={() => setPrefsOpen(false)} />
           <div className="prefs-sheet">
             <span className="prefs-sheet-handle" aria-hidden="true" />

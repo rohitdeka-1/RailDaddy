@@ -39,7 +39,6 @@ export const sheetFrames = { opacity: [0, 1], y: [motionTokens.distance.sheet, 0
 export const polishMotion = {
   revealRise: 20,
   releaseSpring: spring(300, 14),
-  cursor: { dot: 5, ring: 28, expanded: 44, trail: 0.085 },
 } as const;
 
 export function themeRevealRadius(x: number, y: number, width: number, height: number) {

@@ -15,12 +15,10 @@ export function MotionSystem() {
   useEffect(() => {
     const root = document.documentElement;
     Object.entries(motionCssVariables).forEach(([key, value]) => root.style.setProperty(key, value));
-    root.style.setProperty("--cursor-dot-size", `${polishMotion.cursor.dot}px`);
-    root.style.setProperty("--cursor-ring-size", `${polishMotion.cursor.ring}px`);
-    root.style.setProperty("--cursor-expanded-scale", String(polishMotion.cursor.expanded / polishMotion.cursor.ring));
     root.classList.add("motion-ready");
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const mobile = window.matchMedia("(max-width: 760px)");
+    const nativeScroll = window.matchMedia("(max-width: 760px), (pointer: coarse)");
     const syncTiming = () => Object.entries(motionCssVariables).forEach(([key, value]) => root.style.setProperty(key, value));
     mobile.addEventListener("change", syncTiming);
     const seen = new WeakSet<Element>();
@@ -91,9 +89,9 @@ export function MotionSystem() {
       const generation = ++scrollGeneration;
       stopScrolling?.();
       stopScrolling = undefined;
-      if (preference.matches || disposed) return;
+      if (preference.matches || nativeScroll.matches || disposed) return;
       const { default: Lenis } = await import("lenis");
-      if (disposed || preference.matches || generation !== scrollGeneration) return;
+      if (disposed || preference.matches || nativeScroll.matches || generation !== scrollGeneration) return;
       const lenis = new Lenis({
         autoRaf: true,
         duration: 0.5,
@@ -104,8 +102,7 @@ export function MotionSystem() {
         prevent: (node) => !!node.closest('[role="dialog"], [role="listbox"], .sheet-open, .vibe-chips, .routes-row, .route-marquee'),
       });
       const syncLock = () => {
-        const stationSheet = window.matchMedia("(max-width: 760px)").matches && !!document.querySelector('.station-field.sheet-open');
-        const locked = document.body.hasAttribute("data-scroll-locked") || stationSheet || !!document.querySelector('[role="dialog"][data-state="open"]');
+        const locked = document.body.hasAttribute("data-scroll-locked") || !!document.querySelector('[role="dialog"][data-state="open"]');
         if (locked) lenis.stop(); else lenis.start();
       };
       const locks = new MutationObserver(syncLock);
@@ -163,6 +160,7 @@ export function MotionSystem() {
     document.addEventListener("keyup", keyUp);
     window.addEventListener("blur", release);
     preference.addEventListener("change", change);
+    nativeScroll.addEventListener("change", configureScrolling);
     const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "data-state"] });
     scan();
@@ -179,6 +177,7 @@ export function MotionSystem() {
       document.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", release);
       preference.removeEventListener("change", change);
+      nativeScroll.removeEventListener("change", configureScrolling);
       mobile.removeEventListener("change", syncTiming);
       root.classList.remove("motion-ready");
     };

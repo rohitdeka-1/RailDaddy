@@ -1,29 +1,30 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { ArrowDownUp, ArrowRight, ArrowUpRight, CalendarDays, Check, MapPin, Menu, MessageCircle, Sparkles, TrainFront, AlertCircle, X, Users, Minus, Plus, History, ChevronDown, ShieldCheck, RotateCcw, Mic, Send } from "lucide-react";
-import { addDays, format, isSameDay, nextSaturday, startOfDay } from "date-fns";
+import { ArrowDownUp, ArrowUpRight, CalendarDays, MapPin, Menu, MessageCircle, Sparkles, TrainFront, AlertCircle, X, History, ChevronDown, ShieldCheck, RotateCcw, Mic, Send } from "lucide-react";
+import { addDays, format, isSameDay, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DatePanel } from "@/components/date-panel";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import heroJpg from "@/assets/midnight-lake.jpg";
 import { useHomeEntrance } from "@/hooks/use-home-entrance";
 import { HeroAtmosphere, useHeroDepth } from "@/components/hero-depth";
-import { AnimatePresence, LayoutGroup, motion, DrawnCheck, SelectionMark, RollingNumber, SearchAction, SearchCalendarDay, useSearchMicroMotion } from "@/components/search-motion";
+import { AnimatePresence, LayoutGroup, motion, SelectionMark, SearchAction, useSearchMicroMotion } from "@/components/search-motion";
 import { useReducedMotion } from "framer-motion";
 import { motionTokens, searchMotion } from "@/lib/motion";
 import { RouteCard } from "@/components/route-card";
 import { CityMarquee } from "@/components/city-marquee";
 import { useBookingTransition } from "@/components/booking-motion";
 import { ThemeToggle } from "@/components/global-polish";
+import { parseTrip } from "@/lib/trip";
 
 export const Route = createFileRoute("/")({
   head: () => ({ links: [
     { rel: "preload", as: "image", href: heroJpg, type: "image/jpeg", fetchPriority: "high" },
   ], meta: [
     { title: "Rail Daddy — Find train routes & book tickets across India" },
-    { name: "description", content: "Rail Daddy shows you available train routes and tickets: pick where from, where to, when, and your class." },
+    { name: "description", content: "Rail Daddy shows you available train routes and tickets: start by choosing your route and travel date." },
     { property: "og:title", content: "Rail Daddy — Find train routes & book tickets across India" },
-    { property: "og:description", content: "Available train routes and tickets in one place: route, date, class and passengers." },
+    { property: "og:description", content: "Available train routes and tickets in one place. Search by route and travel date." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
     { property: "og:image", content: heroJpg },
@@ -113,13 +114,6 @@ function searchStations(query: string): Station[] {
   return scored.filter((x) => x.score < 99).sort((a, b) => a.score - b.score).slice(0, 6).map((x) => x.s);
 }
 
-const classes = [
-  { name: "SL", tip: "Sleeper: budget beds, open windows, no AC" },
-  { name: "3A", tip: "AC 3-tier: air-conditioned, 6 berths per bay" },
-  { name: "2A", tip: "AC 2-tier: more space, curtains, 4 berths per bay" },
-  { name: "1A", tip: "First AC: private lockable cabins, most comfort" },
-];
-
 /** True on phone widths, where the search card switches to its compact row layout. */
 function useCompactSearchCard() {
   const [compact, setCompact] = useState(false);
@@ -137,17 +131,16 @@ type StationFieldProps = {
   id: "source" | "destination";
   label: string;
   hint: string;
-  errorText: string;
+  error?: string | undefined;
   placeholder: string;
   compactPlaceholder: string;
   compact: boolean;
   value: string;
-  invalid: boolean;
   recent: string[];
   onChange: (value: string) => void;
 };
 
-function StationField({ id, label, hint, errorText, placeholder, compactPlaceholder, compact, value, invalid, recent, onChange }: StationFieldProps) {
+function StationField({ id, label, hint, error, placeholder, compactPlaceholder, compact, value, recent, onChange }: StationFieldProps) {
   const [open, setOpen] = useState(false);
   const fieldRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -210,7 +203,7 @@ function StationField({ id, label, hint, errorText, placeholder, compactPlacehol
 
   let running = -1;
   return (
-    <div ref={fieldRef} className={`station-field ${id}-field pop${invalid ? " field-invalid" : ""}${open ? " sheet-open" : ""}`}>
+    <div ref={fieldRef} className={`station-field ${id}-field pop${error ? " field-invalid" : ""}${open ? " sheet-open" : ""}`}>
       <span className="field-focus-glow" aria-hidden="true" /><label htmlFor={id}><MapPin size={15} /> {label}</label>
       <span className="row-pin" aria-hidden="true"><MapPin size={16} /></span>
       <button type="button" className="sheet-close" aria-label="Close station search" onMouseDown={(event) => event.preventDefault()} onClick={() => { setOpen(false); (document.activeElement as HTMLElement | null)?.blur(); }}><X size={20} /></button>
@@ -229,10 +222,12 @@ function StationField({ id, label, hint, errorText, placeholder, compactPlacehol
         aria-expanded={open && flat.length > 0}
         aria-controls={`${id}-suggestions`}
         aria-activedescendant={activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
-        aria-invalid={invalid}
+        aria-invalid={!!error}
         aria-describedby={`${id}-hint`}
       />
-      <motion.span key={invalid ? "error" : "hint"} initial={invalid && !reduced ? { y: -8, opacity: 0 } : false} animate={{ y: 0, opacity: 1 }} transition={{ duration: motionTokens.duration.micro }} id={`${id}-hint`} className="field-hint">{invalid ? <><AlertCircle size={15} aria-hidden="true" /> {errorText}</> : (findStation(value) ? `${findStation(value)?.code} · ${findStation(value)?.city}` : hint)}</motion.span>
+      <span id={`${id}-hint`} className={error ? "field-hint search-field-error" : "field-hint"}>
+        {error ? <><AlertCircle size={14} aria-hidden="true" />{error}</> : (findStation(value) ? `${findStation(value)?.code} · ${findStation(value)?.city}` : hint)}
+      </span>
       <AnimatePresence>
       {open && flat.length > 0 && (
         <motion.div key="suggestions" data-motion-owned="true" initial={{ scaleY: reduced ? 1 : 0.85, opacity: reduced ? 1 : 0 }} animate={{ scaleY: 1, opacity: 1 }} exit={{ scaleY: reduced ? 1 : 0.95, opacity: 0 }} transition={{ duration: reduced ? 0 : motionTokens.duration.micro, ease: motionTokens.easing.entrance }} id={`${id}-suggestions`} className="station-suggestions" role="listbox"><LayoutGroup id={`${id}-suggestions`}>
@@ -300,14 +295,8 @@ function Index() {
   const [askText, setAskText] = useState("");
   const dateButtonRef = useRef<HTMLButtonElement>(null);
   const closeCalendar = useCallback(() => setCalendarOpen(false), []);
-  const [error, setError] = useState("");
-  const [invalidFields, setInvalidFields] = useState({ source: false, destination: false, date: false });
-  const [travelClass, setTravelClass] = useState("3A");
-  const [passengers, setPassengers] = useState(2);
-  const [dialog, setDialog] = useState<"journey" | "ai" | "about" | null>(null);
+  const [dialog, setDialog] = useState<"ai" | "about" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [quota, setQuota] = useState("General");
-  const [prefsOpen, setPrefsOpen] = useState(false);
   const [swapTurns, setSwapTurns] = useState(0);
   const [validationAttempt, setValidationAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -320,7 +309,6 @@ function Index() {
     return () => observer.disconnect();
   }, []);
   const submittingRef = useRef(false);
-  const [counterDirection, setCounterDirection] = useState(1);
   const reduced = useReducedMotion();
   const { swapNames, leaveSearch } = useSearchMicroMotion(homeRef, swapTurns, validationAttempt);
   const [recent, setRecent] = useState<string[]>([]);
@@ -334,42 +322,37 @@ function Index() {
     } catch { /* ignore corrupt storage */ }
   }, []);
   const navigate = useNavigate();
+  const from = source.trim();
+  const to = destination.trim();
+  const problems = {
+    source: from ? "" : "Enter a departure station.",
+    destination: !to ? "Enter an arrival station." : from.toLowerCase() === to.toLowerCase() ? "Choose a different arrival station." : "",
+    date: date ? "" : "Choose a travel date.",
+  };
+  const fieldErrors = validationAttempt > 0 ? problems : null;
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (submittingRef.current) return;
-    const invalid = { source: !source.trim(), destination: !destination.trim(), date: !date };
-    setInvalidFields(invalid);
-    setValidationAttempt(attempt => attempt + 1);
-    if (invalid.source || invalid.destination || invalid.date) { setError("Fill in the highlighted fields to search."); return; }
-    if (source.trim().toLowerCase() === destination.trim().toLowerCase()) { setError("Choose a destination different from your departure."); return; }
-    if (!date) return;
+    if (problems.source || problems.destination || !date) {
+      setValidationAttempt(attempt => attempt + 1);
+      return;
+    }
     submittingRef.current = true;
     setSubmitting(true);
-    setError("");
     const nextRecent = [destination.trim(), source.trim(), ...recent.filter((r) => r !== source.trim() && r !== destination.trim())].slice(0, 5);
     setRecent(nextRecent);
-    const search = { from: source.trim(), to: destination.trim(), date: date ? date.toISOString() : "" };
+    const search = { from, to, date: date.toISOString() };
     try { window.localStorage.setItem("rd-recent-stations", JSON.stringify(nextRecent)); window.localStorage.setItem("rd-last-search", JSON.stringify(search)); } catch { /* storage unavailable */ }
+    const tripSearch = parseTrip({ from: search.from, to: search.to, date: format(date, "yyyy-MM-dd") });
     await leaveSearch();
     const consoleElement = homeRef.current?.querySelector<HTMLElement>('.booking-console');
     if (consoleElement) {
-      begin(consoleElement, { from: source.trim(), to: destination.trim(), date: format(date, "yyyy-MM-dd"), cls: travelClass, pax: passengers, quota });
+      begin(consoleElement, tripSearch);
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     }
-    await navigate({ to: "/trains", search: { from: source.trim(), to: destination.trim(), date: format(date, "yyyy-MM-dd"), cls: travelClass, pax: passengers, quota } });
+    await navigate({ to: "/trains", search: tripSearch });
   }
-  const renderPrefsControls = (groupId: string) => (
-    <>
-      <span className="controls-label">Class:</span>
-      <LayoutGroup id={groupId}><div className="vibe-chips" role="radiogroup" aria-label="Travel class">
-        {classes.map(({ name, tip }) => <Button variant="ghost" key={name} type="button" role="radio" aria-checked={travelClass === name} aria-describedby={`tip-${groupId}-${name}`} className={`vibe-chip ${travelClass === name ? "on" : ""}`} onClick={() => setTravelClass(name)}>{travelClass === name && <SelectionMark id="class-highlight" />}<span className="class-choice-content"><span className="class-check-slot">{travelClass === name && <DrawnCheck />}</span>{name}</span><span id={`tip-${groupId}-${name}`} role="tooltip" className="class-tip">{tip}</span></Button>)}
-      </div></LayoutGroup>
-      <span className="controls-divider" aria-hidden="true" />
-      <div className="crew-stepper"><Users size={15} /><span>Passengers</span><Button variant="ghost" size="icon" type="button" aria-label="Fewer passengers" disabled={passengers <= 1} onClick={() => { setCounterDirection(-1); setPassengers(c => Math.max(1, c - 1)); }}><Minus size={16} /></Button><RollingNumber value={passengers} direction={counterDirection} /><Button variant="ghost" size="icon" type="button" aria-label="More passengers" disabled={passengers >= 9} onClick={() => { setCounterDirection(1); setPassengers(c => Math.min(9, c + 1)); }}><Plus size={16} /></Button></div>
-      <span className="controls-divider" aria-hidden="true" />
-      <label className="quota-field"><span className="controls-label">Quota</span><span className="quota-select"><select value={quota} onChange={(e) => setQuota(e.target.value)} aria-label="Quota">{["General", "Tatkal", "Ladies", "Senior Citizen"].map((q) => <option key={q} value={q}>{q}</option>)}</select><ChevronDown size={16} aria-hidden="true" /></span></label>
-    </>
-  );
 
   return (
     <div ref={homeRef} className={`railway-app${ctaFloating ? " cta-floating" : ""}`} data-home-entrance="pending">
@@ -423,7 +406,7 @@ function Index() {
           </div>
 
           <div className="booking-area" id="booking">
-            <div className="booking-intro reveal" style={{ ["--d" as string]: "550ms" }}><span><span className="mini-track" /> Start with the route. We'll find the trains.</span>{lastSearch ? <button type="button" className="last-search" aria-label={`Repeat last search: ${shortName(lastSearch.from)} to ${shortName(lastSearch.to)}`} onClick={() => { setSource(lastSearch.from); setDestination(lastSearch.to); const d = new Date(lastSearch.date); if (!Number.isNaN(d.getTime()) && d >= startOfDay(new Date())) setDate(startOfDay(d)); setInvalidFields({ source: false, destination: false, date: false }); setError(""); }}><History size={14} aria-hidden="true" /><span className="last-search-label">Last search</span> {shortName(lastSearch.from)} to {shortName(lastSearch.to)}{lastSearch.date && !Number.isNaN(new Date(lastSearch.date).getTime()) ? `, ${format(new Date(lastSearch.date), "EEE")}` : ""}</button> : <span className="booking-step">01 <span>/ ROUTE BASICS</span></span>}</div>
+            <div className="booking-intro reveal" style={{ ["--d" as string]: "550ms" }}><span><span className="mini-track" /> Start with the route. We'll find the trains.</span>{lastSearch ? <button type="button" className="last-search" aria-label={`Repeat last search: ${shortName(lastSearch.from)} to ${shortName(lastSearch.to)}`} onClick={() => { setSource(lastSearch.from); setDestination(lastSearch.to); const d = new Date(lastSearch.date); if (!Number.isNaN(d.getTime()) && d >= startOfDay(new Date())) setDate(startOfDay(d)); }}><History size={14} aria-hidden="true" /><span className="last-search-label">Last search</span> {shortName(lastSearch.from)} to {shortName(lastSearch.to)}{lastSearch.date && !Number.isNaN(new Date(lastSearch.date).getTime()) ? `, ${format(new Date(lastSearch.date), "EEE")}` : ""}</button> : <span className="booking-step">01 <span>/ ROUTE BASICS</span></span>}</div>
             <form onSubmit={submit} data-mode={cardMode} className={`booking-console${submitting ? " search-submitting" : ""}`} aria-busy={submitting}>
               <span className="booking-landing-surface" aria-hidden="true" />
               <span className="booking-landing-shadow" aria-hidden="true" />
@@ -453,25 +436,31 @@ function Index() {
               )}
               <div className="booking-form">
               <div className="route-block">
-              <StationField id="source" label="From" hint="City, station or code" errorText="Choose where you're starting from" recent={recent} placeholder="Boarding station" compactPlaceholder="From" compact={compactCard} value={source} invalid={invalidFields.source} onChange={(value) => { setSource(value); setInvalidFields((fields) => ({ ...fields, source: false })); setError(""); }} />
-              <Button variant="swap" size="icon" type="button" aria-label="Swap start and destination" title="Swap start and destination" onClick={() => { swapNames(); setSource(destination); setDestination(source); setInvalidFields({ source: false, destination: false, date: false }); setError(""); setSwapTurns((t) => t + 1); }}><span className="swap-glyph"><ArrowDownUp size={18} /></span></Button>
-              <StationField id="destination" label="To" hint="City, station or code" errorText="Choose where you're going" recent={recent} placeholder="Destination city" compactPlaceholder="To" compact={compactCard} value={destination} invalid={invalidFields.destination} onChange={(value) => { setDestination(value); setInvalidFields((fields) => ({ ...fields, destination: false })); setError(""); }} />
+              <StationField id="source" label="From" hint="City, station or code" recent={recent} placeholder="Boarding station" compactPlaceholder="From" compact={compactCard} value={source} error={fieldErrors?.source} onChange={setSource} />
+              <Button variant="swap" size="icon" type="button" aria-label="Swap start and destination" title="Swap start and destination" onClick={() => { swapNames(); setSource(destination); setDestination(source); setSwapTurns((t) => t + 1); }}><span className="swap-glyph"><ArrowDownUp size={18} /></span></Button>
+              <StationField id="destination" label="To" hint="City, station or code" recent={recent} placeholder="Destination city" compactPlaceholder="To" compact={compactCard} value={destination} error={fieldErrors?.destination} onChange={setDestination} />
               </div>
               <div className="date-row">
-              <Button ref={dateButtonRef} variant="date" type="button" aria-label="Open travel calendar" aria-haspopup="dialog" aria-expanded={calendarOpen} data-open={calendarOpen ? "true" : undefined} className={[invalidFields.date ? "field-invalid" : "", calendarOpen ? "date-open" : ""].join(" ").trim()} onClick={() => setCalendarOpen((o) => !o)}><span className="field-focus-glow" aria-hidden="true" /><span className="field-label"><CalendarDays size={15} /> Date</span><span className="date-value">{date ? format(date, "dd MMM yyyy") : "Pick a date"}</span><span className="date-value-short"><CalendarDays size={16} aria-hidden="true" />{date ? format(date, "EEE, d MMM") : "Pick a date"}</span><span className="field-hint">{invalidFields.date ? <><AlertCircle size={15} aria-hidden="true" /> Pick a travel date</> : date ? format(date, "EEEE") : "Open the calendar"}</span><CalendarDays className="date-chevron" size={16} aria-hidden="true" /></Button>
+              <Button ref={dateButtonRef} variant="date" type="button" aria-label={date ? `Travel date, ${format(date, "EEEE, d MMMM yyyy")}` : "Travel date"}
+                aria-haspopup="dialog" aria-expanded={calendarOpen} aria-invalid={!!fieldErrors?.date} aria-describedby={fieldErrors?.date ? "date-error" : undefined}
+                className={`${fieldErrors?.date ? "field-invalid" : ""} ${calendarOpen ? "date-open" : ""}`.trim()} onClick={() => setCalendarOpen((open) => !open)}>
+                <span className="field-focus-glow" aria-hidden="true" />
+                <span className="field-label"><CalendarDays size={15} /> Date</span>
+                <span className="date-value">{date ? format(date, "dd MMM yyyy") : "Pick a date"}</span>
+                <span className="date-value-short"><CalendarDays size={16} aria-hidden="true" />{date ? format(date, "EEE, d MMM") : "Pick a date"}</span>
+                {fieldErrors?.date
+                  ? <span id="date-error" className="field-hint search-field-error"><AlertCircle size={14} aria-hidden="true" />{fieldErrors.date}</span>
+                  : <span className="field-hint">{date ? format(date, "EEEE") : "Open the calendar"}</span>}
+                <ChevronDown className="date-chevron" size={16} aria-hidden="true" />
+              </Button>
               <span className="date-quick" role="group" aria-label="Quick travel dates">
-                <button type="button" className={date && isSameDay(date, today) ? "on" : ""} aria-pressed={!!date && isSameDay(date, today)} onClick={() => { setDate(today); setInvalidFields((fields) => ({ ...fields, date: false })); setError(""); }}>Today</button>
-                <button type="button" className={date && isSameDay(date, tomorrow) ? "on" : ""} aria-pressed={!!date && isSameDay(date, tomorrow)} onClick={() => { setDate(tomorrow); setInvalidFields((fields) => ({ ...fields, date: false })); setError(""); }}>Tomorrow</button>
+                <button type="button" className={date && isSameDay(date, today) ? "on" : ""} aria-pressed={!!date && isSameDay(date, today)} onClick={() => setDate(today)}>Today</button>
+                <button type="button" className={date && isSameDay(date, tomorrow) ? "on" : ""} aria-pressed={!!date && isSameDay(date, tomorrow)} onClick={() => setDate(tomorrow)}>Tomorrow</button>
               </span>
               </div>
               </div>
-             <button type="button" className="prefs-summary" aria-haspopup="dialog" aria-expanded={prefsOpen} onClick={() => setPrefsOpen(true)}>
-               <span className="prefs-summary-text">{travelClass}<span className="prefs-dot" aria-hidden="true" />{passengers} passenger{passengers > 1 ? "s" : ""}<span className="prefs-dot" aria-hidden="true" />{quota}</span>
-               <ChevronDown size={16} aria-hidden="true" />
-             </button>
-             <AnimatePresence>{error && <motion.p key={validationAttempt} initial={{ y: reduced ? 0 : -8, opacity: reduced ? 1 : 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : motionTokens.duration.micro }} className="form-error" role="alert"><AlertCircle size={16} aria-hidden="true" /><strong>Error:</strong> {error}</motion.p>}</AnimatePresence>
+             <span className="sr-only" role="status">{fieldErrors && Object.values(fieldErrors).filter(Boolean).join(" ")}</span>
              <div className="booking-controls reveal" style={{ ["--d" as string]: "870ms" }}>
-              <div className="controls-panel">{renderPrefsControls("search-class")}</div>
                <SearchAction busy={submitting} />
             </div>
             </form>
@@ -485,11 +474,11 @@ function Index() {
             <div className="routes-head"><span className="routes-label">Popular routes</span><span className="routes-sub">Tap one — it fills the form</span></div>
             <div className="routes-row">
               {popularRoutes.map((route, index) => (
-                <RouteCard key={route.from + route.to} route={route} index={index} onChoose={() => { setSource(route.from); setDestination(route.to); setInvalidFields({ source: false, destination: false, date: false }); setError(""); }} />
+                <RouteCard key={route.from + route.to} route={route} index={index} onChoose={() => { setSource(route.from); setDestination(route.to); }} />
               ))}
             </div>
           </div>
-        <CityMarquee cities={marqueeCities} destination={destination} onChoose={city => { setDestination(city); setInvalidFields(fields => ({ ...fields, destination: false })); setError(""); }} />
+        <CityMarquee cities={marqueeCities} destination={destination} onChoose={setDestination} />
       <footer className="site-footer">
         <div className="footer-top">
           <div className="footer-brand"><span className="footer-wordmark">RAIL DADDY<span className="footer-stop">.</span></span><p className="footer-tagline">Trips worth the ride.</p></div>
@@ -509,18 +498,17 @@ function Index() {
         </div>
       </footer>
       </section>
-      {prefsOpen && (
-        <div className="prefs-sheet-root" data-motion-owned="true" role="dialog" aria-modal="true" aria-label="Class, passengers and quota">
-          <button type="button" className="prefs-sheet-backdrop" aria-label="Close" onClick={() => setPrefsOpen(false)} />
-          <div className="prefs-sheet">
-            <span className="prefs-sheet-handle" aria-hidden="true" />
-            <div className="prefs-sheet-body">{renderPrefsControls("search-class-sheet")}</div>
-            <Button variant="journey" type="button" className="prefs-sheet-done" onClick={() => setPrefsOpen(false)}>Done</Button>
-          </div>
-        </div>
-      )}
-      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}><DialogContent className="railway-dialog"><DialogHeader><div className="dialog-icon">{dialog === "ai" ? <MessageCircle /> : <TrainFront />}</div><DialogTitle>{dialog === "ai" ? "Hey, Daddy AI here." : dialog === "journey" ? "Your route." : "Why travel by rail?"}</DialogTitle><DialogDescription>{dialog === "ai" ? "No plan? No problem. Tell me your route, budget and dates and I’ll find the best train options for you. Live AI chat isn’t connected in this design preview." : dialog === "journey" ? `${travelClass} class, ${quota} quota, for ${passengers} passenger${passengers > 1 ? "s" : ""}. Live train availability and fares aren’t connected in this design preview.` : "Rail travel means no airport stress, more scenery and a journey that’s part of the holiday. Rail Daddy finds the right train for you."}</DialogDescription></DialogHeader>{dialog === "journey" && <div className="journey-summary"><div><span>{source}</span><ArrowRight /><span>{destination}</span></div><p><CalendarDays size={16} />{date ? format(date, "EEEE, dd MMMM yyyy") : ""}</p></div>}<Button variant="travel" onClick={() => setDialog(null)}>{dialog === "journey" ? "Back to search" : "Got it"}<X size={16} /></Button></DialogContent></Dialog>
-      <DatePanel open={calendarOpen} anchor={dateButtonRef} value={date} onClose={closeCalendar} onSelect={(d) => { setDate(d); setInvalidFields((fields) => ({ ...fields, date: false })); setError(""); }} />
+      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
+        <DialogContent className="railway-dialog">
+          <DialogHeader>
+            <div className="dialog-icon">{dialog === "ai" ? <MessageCircle /> : <TrainFront />}</div>
+            <DialogTitle>{dialog === "ai" ? "Hey, Daddy AI here." : "Why travel by rail?"}</DialogTitle>
+            <DialogDescription>{dialog === "ai" ? "No plan? No problem. Tell me your route, budget and dates and I’ll find the best train options for you. Live AI chat isn’t connected in this design preview." : "Rail travel means no airport stress, more scenery and a journey that’s part of the holiday. Rail Daddy finds the right train for you."}</DialogDescription>
+          </DialogHeader>
+          <Button variant="travel" onClick={() => setDialog(null)}>Got it<X size={16} /></Button>
+        </DialogContent>
+      </Dialog>
+      <DatePanel open={calendarOpen} anchor={dateButtonRef} value={date} onClose={closeCalendar} onSelect={setDate} />
       <div className="cta-fade" aria-hidden="true" />
     </div>
   );

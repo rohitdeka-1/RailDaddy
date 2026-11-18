@@ -22,7 +22,7 @@ export function BookingShell({ step, trip, back, children, bar }: {
     <div className="flow-app">
       <header className="flow-header" data-motion-owned="true">
         <Link to="/" className="flow-wordmark" aria-label="Rail Daddy home">RAIL <span>DADDY</span>.</Link>
-        <BookingSummary><p className="flow-trip"><strong>{trip.from}</strong><ArrowRight size={14} aria-hidden="true" /><strong>{trip.to}</strong><span>· {tripDateLabel(trip.date)} · {trip.cls} · {trip.pax} pax</span></p></BookingSummary>
+        <BookingSummary><p className="flow-trip"><strong>{trip.from}</strong><ArrowRight size={14} aria-hidden="true" /><strong>{trip.to}</strong><span>· {tripDateLabel(trip.date)}{step > 1 && ` · ${trip.cls} · ${trip.pax} pax`}</span></p></BookingSummary>
       </header>
       <nav aria-label="Booking progress" className="flow-steps" data-motion-owned="true">
         <ol>

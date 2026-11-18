@@ -23,11 +23,6 @@ export function SearchCalendarDay(props: ComponentProps<typeof DayButton>) {
   return <CalendarDayButton {...props}>{props.modifiers['selected'] && !props.modifiers['outside'] && <SelectionMark id="search-date" circle />}<span className="selection-content">{props.children}</span></CalendarDayButton>;
 }
 
-export function RollingNumber({ value, direction }: { value: number; direction: number }) {
-  const reduced = useReducedMotion();
-  return <strong className="rolling-number" aria-live="polite" aria-atomic="true"><span className="sr-only">{value}</span><AnimatePresence initial={false} custom={direction}><motion.span key={value} aria-hidden="true" custom={direction} variants={{ enter: (d: number) => ({ y: reduced ? 0 : d * 24, opacity: reduced ? 1 : 0 }), exit: (d: number) => ({ y: reduced ? 0 : -d * 24, opacity: 0 }) }} initial="enter" animate={{ y: 0, opacity: 1 }} exit="exit" transition={{ duration: reduced ? 0 : motionTokens.duration.micro, ease: motionTokens.easing.entrance }}>{value}</motion.span></AnimatePresence></strong>;
-}
-
 export function SearchAction({ busy }: { busy: boolean }) {
   const reduced = useReducedMotion();
   const x = useMotionValue(0), y = useMotionValue(0);

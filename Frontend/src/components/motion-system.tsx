@@ -4,9 +4,9 @@ import { entranceFrames, expoEase, motionCssVariables, motionTokens, polishMotio
 import { useAnimationBudget } from "@/hooks/use-animation-budget";
 
 const clickable = 'button, a[href], select, input:not([type="hidden"]), label[for], summary, [role="button"]';
-const snappy = '[role="radio"], [role="switch"], .theme-toggle, .menu-toggle, .marquee-city, .seat, .quick-dates button, .rdp-day_button';
+const snappy = '[role="radio"], [role="switch"], .theme-toggle, .menu-toggle, .marquee-city, .quick-dates button, .rdp-day_button';
 // Never transform an ancestor of a fixed CTA or full-screen station picker.
-const entrances = '.site-header, .hero-eyebrow, .hero-content h1 .line > span, .hero-subhead, .booking-intro, .routes-head, .route-card, .city-marquee, .site-footer, .flow-header, .flow-steps, .flow-title-row, .train-card, .flow-main > .flow-card, .pax-form > fieldset, .pay-grid > *, .alternates, .coach, .info-bar, .info-head, .info-intro, .info-point, .info-closing, .info-trust, .info-cta';
+const entrances = '.site-header, .hero-eyebrow, .hero-content h1 .line > span, .hero-subhead, .booking-intro, .routes-head, .route-card, .city-marquee, .site-footer, .flow-header, .flow-steps, .flow-title-row, .train-card, .flow-main > .flow-card, .pax-form > fieldset, .pay-grid > *, .alternates, .info-bar, .info-head, .info-intro, .info-point, .info-closing, .info-trust, .info-cta';
 const sheets = '.mobile-menu, .station-suggestions, [role="dialog"], .station-field.sheet-open';
 
 /** Delegation also covers Radix portals, calendar days and controls mounted later. */
@@ -99,7 +99,7 @@ export function MotionSystem() {
         smoothWheel: true,
         syncTouch: false,
         anchors: true,
-        prevent: (node) => !!node.closest('[role="dialog"], [role="listbox"], .sheet-open, .vibe-chips, .routes-row, .route-marquee'),
+        prevent: (node) => !!node.closest('[role="dialog"], [role="listbox"], .sheet-open, .routes-row, .route-marquee'),
       });
       const syncLock = () => {
         const locked = document.body.hasAttribute("data-scroll-locked") || !!document.querySelector('[role="dialog"][data-state="open"]');

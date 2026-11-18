@@ -15,7 +15,7 @@ const topics: Record<string, Topic> = {
     kicker: "Who we are",
     intro: "Rail Daddy is a booking assistant for Indian train travel. We help you pick a route, compare classes and reach a shortlist of trains worth booking — without the maze.",
     points: [
-      { heading: "What Rail Daddy does", body: "Searches trains between two stations, filters by class and quota, and shows you the options in one place so you can decide quickly." },
+      { heading: "What Rail Daddy does", body: "Searches trains between two stations, and shows timings and fares by class so you can compare your options." },
       { heading: "What Rail Daddy is not", body: "We are not Indian Railways. Tickets are issued, confirmed and cancelled through authorized Indian Railways channels." },
       { heading: "Where this build stands", body: "This is a design preview. The stations, timings and fares you see on the search page are sample values, not live inventory." },
     ],
@@ -28,7 +28,6 @@ const topics: Record<string, Topic> = {
     points: [
       { heading: "How a search works", body: "Type a city, station name or station code in From and To, pick a travel date, choose a class and passenger count, then press Find my train." },
       { heading: "What the classes mean", body: "SL is sleeper, an unreserved-bunk coach. 3A is three berths a side with blankets. 2A is two berths a side and roomier. 1A is the most private and costly." },
-      { heading: "Quota, briefly", body: "General is the open pool. Tatkal opens a day ahead for last-minute plans. Ladies and Senior Citizen are reserved pools for travellers who qualify." },
       { heading: "Dates", body: "Travel dates start from tomorrow. Today, Tomorrow and This weekend are one tap in the calendar." },
     ],
     closing: "Still stuck? The Contact page is the quickest way to reach us.",

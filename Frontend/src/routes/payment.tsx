@@ -98,7 +98,6 @@ function Payment() {
             <div><dt>Convenience fee</dt><dd>{rupees(fee)}</dd></div>
             <div className="total"><dt>Total</dt><dd>{rupees(total)}</dd></div>
           </dl>
-          <p className="field-hint">Seats: {trip.seats?.split(",").join(", ") || "—"}</p>
         </aside>
       </div>
     </BookingShell>

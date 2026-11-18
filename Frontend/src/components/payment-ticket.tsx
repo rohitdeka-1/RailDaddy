@@ -37,7 +37,7 @@ export function PaymentTicket({ trip, train }: { trip: Trip; train: Train | unde
   });
   const details = [
     { label: "Train", value: train ? `${train.name} · #${train.number}` : "No train selected" },
-    { label: "Seat & class", value: `${trip.seats?.split(",").join(", ") || "Not selected"} · ${trip.cls} · ${trip.pax} traveller${trip.pax > 1 ? "s" : ""}` },
+    { label: "Class & travellers", value: `${trip.cls} · ${trip.pax} traveller${trip.pax > 1 ? "s" : ""}` },
     { label: "Departure", value: `${tripDateLabel(trip.date)} · ${train?.depart || "—"}` },
   ];
   return <section className="payment-celebration" aria-labelledby="ticket-success-title" data-motion-owned="true">

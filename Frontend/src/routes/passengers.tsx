@@ -4,7 +4,7 @@ import { ArrowRight, AlertCircle, User } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { BookingShell, FareBar } from "@/components/booking-shell";
-import { parseTrip, findTrain, offerFor, rupees } from "@/lib/trip";
+import { parseTrip, findTrain, offerFor, rupees, MAX_PASSENGERS } from "@/lib/trip";
 
 export const Route = createFileRoute("/passengers")({
   validateSearch: parseTrip,
@@ -46,10 +46,10 @@ function Passengers() {
   const trip = Route.useSearch();
   const navigate = useNavigate();
   const offer = offerFor(findTrain(trip), trip.cls);
-  const seats = trip.seats?.split(",") ?? [];
-  const [pax, setPax] = useState<Pax[]>(() => Array.from({ length: trip.pax }, () => ({ name: "", age: "", gender: "" })));
+  const [pax, setPax] = useState<Pax[]>(() => Array.from({ length: MAX_PASSENGERS }, () => ({ name: "", age: "", gender: "" })));
   const [contact, setContact] = useState({ phone: "", email: "" });
   const [errors, setErrors] = useState<Errors>({});
+  const activePassengers = pax.slice(0, trip.pax);
   const total = (offer?.fare ?? 0) * trip.pax;
 
   const checkPax = (i: number, p: Pax, key: keyof Pax) => {
@@ -68,7 +68,7 @@ function Passengers() {
   function submit(e: FormEvent) {
     e.preventDefault();
     const next: Errors = {};
-    pax.forEach((p, i) => { const r = paxSchema.safeParse(p); if (!r.success) r.error.issues.forEach((iss) => { next[`p${i}-${String(iss.path[0])}`] ??= iss.message; }); });
+    activePassengers.forEach((p, i) => { const r = paxSchema.safeParse(p); if (!r.success) r.error.issues.forEach((iss) => { next[`p${i}-${String(iss.path[0])}`] ??= iss.message; }); });
     const c = contactSchema.safeParse(contact); if (!c.success) c.error.issues.forEach((iss) => { next[String(iss.path[0])] ??= iss.message; });
     setErrors(next);
     const first = Object.keys(next)[0];
@@ -79,13 +79,22 @@ function Passengers() {
   const cta = <Button variant="journey" type="submit" form="pax-form" className="flow-cta">Continue to pay <ArrowRight size={18} /></Button>;
 
   return (
-    <BookingShell step={2} trip={trip} back={<Link to="/seats" search={trip}>Back to seats</Link>}
+    <BookingShell step={2} trip={trip} back={<Link to="/trains" search={trip}>Back to trains</Link>}
       bar={<FareBar note={`${trip.pax} passenger${trip.pax > 1 ? "s" : ""} · ${trip.cls}`} total={rupees(total)} action={cta} />}>
       <div className="flow-title-row"><h1 className="flow-title">Who’s travelling?</h1><p className="flow-sub">Names must match a government ID shown on board.</p></div>
       <form id="pax-form" noValidate onSubmit={submit} className="pax-form">
-        {pax.map((p, i) => (
+        <div className="flow-card passenger-count">
+          <Field id="passenger-count" label="Number of passengers">
+            <select id="passenger-count" value={trip.pax} onChange={(event) => {
+              void navigate({ to: "/passengers", search: { ...trip, pax: Number(event.target.value) }, replace: true, resetScroll: false });
+            }}>
+              {Array.from({ length: MAX_PASSENGERS }, (_, index) => <option key={index + 1}>{index + 1}</option>)}
+            </select>
+          </Field>
+        </div>
+        {activePassengers.map((p, i) => (
           <fieldset key={i} className="flow-card">
-            <legend className="pax-legend"><User size={16} aria-hidden="true" />Passenger {i + 1}{seats[i] && <span>Seat {seats[i]}</span>}</legend>
+            <legend className="pax-legend"><User size={16} aria-hidden="true" />Passenger {i + 1}</legend>
             <div className="form-grid">
               <Field id={`p${i}-name`} label="Full name" error={errors[`p${i}-name`]}>
                 <input {...aria(`p${i}-name`)} autoComplete="name" maxLength={60} value={p.name} placeholder="e.g. Priya Sharma" onChange={(e) => update(i, "name", e.target.value)} onBlur={() => checkPax(i, p, "name")} />

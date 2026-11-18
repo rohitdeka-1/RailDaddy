@@ -353,10 +353,6 @@ h1 > span:first-child { color: var(--foreground); }
 .journey-button:hover .journey-arrow { transform: translate(4px, -4px); background: color-mix(in oklch, var(--foreground) 16%, transparent); }
 .search-subtitle { font-size: 13px; color: var(--text-helper); font-weight: 400; }
 .booking-controls { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; }
-.controls-panel { display: flex; align-items: center; gap: 14px; height: 68px; padding: 0 22px; border-radius: var(--radius-lg-ui); border: 1px solid var(--border); background: color-mix(in oklch, var(--secondary) 72%, transparent); backdrop-filter: blur(10px); min-width: 0; }
-.controls-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-helper); white-space: nowrap; flex-shrink: 0; }
-.controls-divider { width: 1px; height: 34px; background: var(--border); flex-shrink: 0; }
-.form-error { color: var(--destructive); font-size: 13px; margin: 12px 0 0; }
 .route-marquee { overflow: hidden; border-top: 1px solid var(--border); padding: 12px 0 0; mask-image: linear-gradient(90deg, transparent, var(--background) 8%, var(--background) 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, var(--background) 8%, var(--background) 92%, transparent); }
 .marquee-track { display: flex; width: max-content; animation: marquee 32s linear infinite; }
 .route-marquee:hover > div, .route-marquee:focus-within > div { animation-play-state: paused; }
@@ -385,9 +381,6 @@ h1 > span:first-child { color: var(--foreground); }
 .scenic-link:hover { text-decoration: none; }
 .railway-dialog { border-radius: var(--radius-lg-ui); box-shadow: var(--shadow-dialog); }
 .dialog-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-lg-ui); background: var(--primary); color: var(--block-ink); margin-bottom: 14px; }
-.journey-summary { background: var(--secondary); padding: 20px; border-radius: var(--radius-lg-ui); }
-.journey-summary > div, .journey-summary p { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.journey-summary p { font-size: 13px; color: var(--text-helper); margin-top: 14px; }
 @keyframes lights-arrive { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes star-turn { to { transform: rotate(360deg); } }
 @media (min-width: 1400px) { .lights-backdrop { width: 1300px; right: -110px; } }
@@ -428,8 +421,6 @@ h1 > span:first-child { color: var(--foreground); }
   .date-value { font-size: 21px; }
   .field-hint, .search-subtitle { display: none; }
   .booking-controls { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .controls-panel { height: auto; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--radius-lg-ui); }
-  .controls-label, .controls-divider { display: none; }
   .journey-button { grid-column: 1; height: 60px; border-radius: var(--radius-lg-ui); padding: 12px 20px; font-size: 17px; margin-top: 4px; }
   .journey-arrow { width: 38px; height: 38px; }
   .route-marquee { padding: 24px 0; overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(90deg, transparent, var(--background) 24px, var(--background) calc(100% - 24px), transparent); -webkit-mask-image: linear-gradient(90deg, transparent, var(--background) 24px, var(--background) calc(100% - 24px), transparent); }
@@ -440,7 +431,6 @@ h1 > span:first-child { color: var(--foreground); }
   .footer-top { flex-direction: column; gap: 14px; }
   .footer-links { gap: 6px 16px; }
   .railway-dialog { width: calc(100% - 32px); max-height: calc(100dvh - 40px); overflow-y: auto; }
-  .journey-summary > div { overflow-wrap: anywhere; }
 }
 @media (max-width: 370px) {
   .railway-app { padding: 0 16px; }
@@ -472,40 +462,20 @@ h1 .line:first-child > span { color: var(--foreground); }
 .journey-button:hover { background: var(--primary); color: var(--primary-foreground); }
 .journey-button:hover > * { color: var(--primary-foreground); }
 .journey-button:hover .search-subtitle { color: color-mix(in oklch, var(--block-ink) 70%, transparent); }
-.vibe-chips { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; min-width: 0; scrollbar-width: none; }
-.vibe-chip, .crew-stepper { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--secondary); color: var(--text-helper); font-size: 13px; font-weight: 500; transition: all .4s cubic-bezier(.34,1.56,.64,1); cursor: pointer; flex-shrink: 0; }
-.vibe-chip:hover { color: var(--foreground); transform: translateY(-3px); }
-.vibe-chip.on { background: var(--butter); color: var(--block-ink); border-color: transparent; transform: scale(1.06); }
-.vibe-chip.on svg { animation: wiggle .6s ease; }
-.crew-stepper { cursor: default; color: var(--foreground); padding: 0 6px 0 16px; }
-.crew-stepper button { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--foreground); transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s; }
-.crew-stepper button:hover { background: var(--peach); color: var(--block-ink); transform: scale(1.12); }
-.crew-stepper button:active { transform: scale(.88); }
-.crew-stepper strong { min-width: 16px; text-align: center; font-size: 15px; animation: tick .4s cubic-bezier(.34,1.56,.64,1); }
 @keyframes rise { from { opacity: 0; transform: translateY(24px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(40px) scale(.92) rotate(2deg); } to { opacity: 1; transform: none; } }
 @keyframes mask-up { from { transform: translateY(105%) skewY(6deg); } to { transform: none; } }
 @keyframes star-in { from { opacity: 0; transform: scale(0) rotate(-180deg); } to { opacity: 1; transform: none; } }
 @keyframes train-hum { 0%,100% { translate: 0 0; } 50% { translate: 0 -4px; } }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklch,var(--primary) 60%,transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
-@keyframes wiggle { 0%,100% { transform: rotate(0); } 30% { transform: rotate(-14deg); } 60% { transform: rotate(10deg); } }
-@keyframes tick { from { transform: translateY(-8px) scale(1.4); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (max-width: 760px) {
 
-  .vibe-chips { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; }
   .station-field.pop:hover, .date-button.pop:hover { transform: none; }
   .station-field::after, .date-button::after { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) { *, *:before, *:after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 @media (max-width: 760px) {
   .lights-backdrop { top: 0; right: -120px; width: 620px; height: 420px; opacity: .55; }
-  .controls-panel { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 14px; }
-  .controls-label, .controls-divider { display: none; }
-  .vibe-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; overflow: visible; }
-  .vibe-chip { justify-content: center; padding: 0 6px; gap: 4px; font-size: 12px; height: 38px; }
-  .vibe-chip.on { transform: none; }
-  .crew-stepper { justify-content: space-between; width: 100%; }
-  .crew-stepper > span { margin-right: auto; }
   .journey-button { background: var(--primary); color: var(--block-ink); border-color: transparent; }
   .journey-button > * { color: var(--block-ink); }
 }
@@ -637,18 +607,10 @@ h1 .line:first-child > span { color: var(--foreground); }
   border-radius: 0 0 26px 26px; padding: 16px; gap: 16px;
   grid-template-columns: minmax(0, 1fr) 250px;
 }
-.controls-panel { border: 0; border-radius: 0; background: transparent; padding: 0 8px; height: 52px; gap: 12px; backdrop-filter: none; }
-.vibe-chip { height: 30px; padding: 0 12px; border-radius: var(--radius-sm-ui); background: transparent; }
-.vibe-chip.on { background: var(--primary); color: var(--primary-foreground); transform: none; }
-.crew-stepper { background: transparent; border: 0; padding-left: 4px; gap: 8px; }
-.crew-stepper button { padding: 0; }
 .journey-button { height: 54px; border-radius: 999px; background: var(--foreground); color: var(--background); border: 0; padding: 0 22px; justify-content: center; text-align: center; }
 .journey-arrow { background: var(--background); color: var(--foreground); }
 .journey-button .search-subtitle { color: color-mix(in oklch, var(--background) 72%, transparent); }
 .date-confirm { height: 42px; }
-.form-error { padding: 0 24px 12px; color: var(--destructive); }
-.station-field.field-invalid, .date-button.field-invalid { background: color-mix(in oklch, var(--destructive) 12%, var(--console-control)); box-shadow: inset 0 0 0 2px var(--destructive); }
-.station-field.field-invalid label, .date-button.field-invalid .field-label, .station-field.field-invalid .field-hint, .date-button.field-invalid .field-hint { color: var(--destructive); }
 .station-field:focus-within { z-index: 10; }
 .station-suggestions { position: absolute; z-index: 20; top: calc(100% - 8px); left: 14px; right: 14px; padding: 7px; border: 1px solid var(--border); border-radius: var(--radius-lg-ui); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-console); }
 .station-suggestions button { width: 100%; height: 38px; justify-content: flex-start; border-radius: var(--radius-sm-ui); padding: 0 12px; color: var(--text-helper); font-size: 14px; }
@@ -724,7 +686,6 @@ h1 .line:first-child > span { color: var(--foreground); }
 @media (prefers-reduced-motion: reduce) { .route-field-arrival .field-focus-glow { animation: none; } .route-spotlight, .route-train-dot { display: none; } }
 @media (max-width: 940px) and (min-width: 761px) {
   .booking-controls { grid-template-columns: 1fr; }
-  .controls-panel { justify-content: flex-start; }
 }
 @media (max-width: 760px) {
   .journey-stage { gap: 20px; }
@@ -746,9 +707,6 @@ h1 .line:first-child > span { color: var(--foreground); }
   .swap-button { left: auto; right: 14px; top: 62px; margin-top: 0; width: 48px; height: 48px; }
   .swap-button:hover { transform: rotate(180deg) scale(1.06); }
   .booking-controls { grid-template-columns: 1fr; padding: 14px; gap: 12px; border-radius: 0 0 24px 24px; }
-  .controls-panel { height: auto; display: grid; padding: 0; gap: 12px; }
-  .vibe-chip { height: 34px; }
-  .crew-stepper { padding: 0; }
   .journey-button { margin: 0; height: 52px; background: var(--foreground); color: var(--background); }
   .journey-button > * { color: var(--background); }
   .journey-button .journey-arrow { color: var(--foreground); }
@@ -765,8 +723,6 @@ h1 .line:first-child > span { color: var(--foreground); }
 /* ---- Interaction states ---- */
 :where(button, a, input, select, [role="radio"], [tabindex]):focus-visible { outline: 2px solid var(--primary) !important; outline-offset: 3px; }
 .station-field input:focus-visible { outline-offset: 6px; }
-.vibe-chip.on { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary); font-weight: 700; }
-.vibe-chip svg { flex-shrink: 0; }
 .route-marquee:hover > div, .route-marquee:focus-within > div { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .route-marquee { overflow-x: auto; scrollbar-width: none; }
@@ -780,10 +736,7 @@ h1 .line:first-child > span { color: var(--foreground); }
   .booking-form { display: flex; flex-direction: column; position: relative; }
   .booking-form .swap-button { position: relative; left: auto; right: auto; top: auto; align-self: center; margin: -24px 0; width: 52px; height: 52px; z-index: 4; transform: rotate(0deg); }
   .booking-form .swap-button:hover { transform: rotate(180deg) scale(1.06); }
-  .vibe-chip { height: 44px; min-width: 44px; font-size: 14px; }
-  .crew-stepper { min-height: 44px; }
-  .crew-stepper button { width: 44px; height: 44px; }
-  .booking-console .booking-controls .journey-button { height: 52px; width: 100%; margin: 16px 0 0; background: var(--primary); color: var(--primary-foreground); }
+  .booking-console .booking-controls .journey-button { height: 52px; width: 100%; margin: 0; background: var(--primary); color: var(--primary-foreground); }
   .cta-floating .booking-console .booking-controls .journey-button { position: fixed; left: 16px; right: 16px; width: auto; margin: 0; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40; box-shadow: 0 14px 40px oklch(0 0 0 / 55%); animation: cta-rise .35s cubic-bezier(.16,1,.3,1); }
   .cta-floating .booking-controls::after { content: ''; height: 68px; }
   .booking-controls .journey-button > * { color: var(--primary-foreground); }
@@ -799,10 +752,10 @@ h1 .line:first-child > span { color: var(--foreground); }
   .footer-copy { order: 5; }
   .footer-bottom { display: contents; }
 
-  body:has(.station-field.sheet-open, .date-sheet, .prefs-sheet-root) { overflow: hidden; }
+  body:has(.station-field.sheet-open, .date-sheet) { overflow: hidden; }
   .station-field.sheet-open { position: fixed; inset: var(--station-sheet-top, 0px) 0 auto; z-index: 60; height: var(--station-sheet-height, 100dvh); border-radius: 0 !important; border: 0; padding: 20px 18px; background: var(--background); display: flex; flex-direction: column; gap: 10px; animation: sheet-up .32s cubic-bezier(.22,1,.36,1); }
   .station-field.sheet-open input { flex: none; height: 56px; border-radius: var(--radius-lg-ui); padding: 0 16px; background: var(--card); border: 1px solid var(--primary); font-size: 20px; }
-  .station-field.sheet-open .field-hint { display: none; }
+  .station-field.sheet-open .field-hint:not(.search-field-error) { display: none; }
   .station-field.sheet-open .sheet-close { display: grid; place-items: center; position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; background: var(--secondary); color: var(--foreground); }
   .station-field:not(.sheet-open) .station-suggestions { visibility: hidden; }
   .station-field.sheet-open .station-suggestions { position: static; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; border: 0; background: transparent; box-shadow: none; padding: 4px 0; }
@@ -855,9 +808,9 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .content-light .popular-routes { padding: 0; }
 
 /* Typography scale */
-.station-field label, .field-label, .controls-label { font-size: var(--text-label); text-transform: uppercase; letter-spacing: .08em; }
-.field-hint, .routes-sub, .route-note, .site-footer, .form-error { font-size: var(--text-helper-size); }
-.nav-button, .vibe-chip { font-size: 14px; }
+.station-field label, .field-label { font-size: var(--text-label); text-transform: uppercase; letter-spacing: .08em; }
+.field-hint, .routes-sub, .route-note, .site-footer { font-size: var(--text-helper-size); }
+.nav-button { font-size: 14px; }
 .journey-title { font-size: 16px; }
 
 /* Marigold only on primary buttons and selected states */
@@ -873,7 +826,6 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .quick-dates button.active { background: var(--primary); color: var(--primary-foreground); }
 .station-field input:focus-visible { box-shadow: 0 2px 0 var(--foreground); }
 :where(button, a, input, select, [role="radio"], [tabindex]):focus-visible { outline-color: var(--ring) !important; }
-.vibe-chip.on { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary); }
 
 /* Light content surfaces */
 .route-card { box-shadow: var(--shadow-soft); color: var(--foreground); }
@@ -882,8 +834,6 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .railway-dialog, .date-dialog { background: var(--card); color: var(--card-foreground); border-radius: var(--radius-lg-ui); }
 
 /* Status: always icon + label */
-.form-error { display: flex; align-items: center; gap: var(--space-1); color: var(--destructive); font-weight: 500; }
-.form-error strong { font-weight: 700; }
 
 /* Theme toggle + mobile menu button */
 .theme-toggle { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--foreground); cursor: pointer; transition: background .2s, transform .3s; }
@@ -923,40 +873,18 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .booking-console .destination-field { padding-left: 44px; }
 .booking-console .station-field.pop:hover, .booking-console .date-button.pop:hover { background: var(--console-control); transform: none; }
 .booking-console .station-field:focus-within, .booking-console .date-button:focus-visible { transform: none; background: var(--rd-white); box-shadow: inset 0 0 0 2px var(--rd-indigo); }
-.booking-console .station-field.field-invalid, .booking-console .date-button.field-invalid { background: color-mix(in oklch, var(--error) 6%, var(--rd-cream)); box-shadow: inset 0 0 0 2px var(--error); }
-.booking-console .field-invalid label, .booking-console .field-invalid .field-label, .booking-console .field-invalid .field-hint { color: var(--error); font-weight: 600; }
 .booking-console .swap-button {
   left: calc(100% / 3 - 22px); top: 50%; width: 44px; height: 44px; margin-top: -22px; padding: 0;
   background: var(--rd-white); color: var(--rd-indigo); border: 1px solid var(--border-strong); box-shadow: 0 6px 18px -6px oklch(0.265 0.055 270.6 / 35%);
   --base: 90deg; transform: rotate(calc(var(--base) + var(--spin, 0deg))); transition: transform .45s cubic-bezier(.34,1.56,.64,1), border-color .2s;
 }
 .booking-console .swap-button:hover { transform: rotate(calc(var(--base) + var(--spin, 0deg))) scale(1.06); border-color: var(--rd-indigo); background: var(--rd-white); }
-.booking-console .booking-controls { border-top: 1px solid var(--border); background: var(--console-control); border-radius: 0 0 20px 20px; padding: 16px; grid-template-columns: minmax(0, 1fr) 240px; align-items: center; }
-.booking-console .controls-panel { height: auto; min-height: 56px; flex-wrap: wrap; row-gap: 10px; }
-.booking-console .controls-label { color: var(--rd-indigo); font-weight: 600; font-size: 13px; }
-.booking-console .controls-divider { width: 1px; height: 28px; background: var(--border); }
-.booking-console .vibe-chips { overflow: visible; }
-.booking-console .vibe-chip { position: relative; height: 38px; padding: 0 14px; border-radius: 12px; background: var(--rd-white); border: 1px solid var(--border-strong); color: var(--rd-indigo); font-weight: 600; box-shadow: none; transform: none; }
-.booking-console .vibe-chip:hover { transform: none; border-color: var(--rd-indigo); background: var(--rd-white); }
-.booking-console .vibe-chip.on { background: var(--rd-marigold); color: var(--rd-indigo); border-color: var(--rd-indigo); box-shadow: none; font-weight: 700; }
-.class-tip { position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 4px; width: max-content; max-width: 220px; white-space: normal; text-align: left; padding: 8px 10px; border-radius: 12px; background: var(--rd-indigo); color: var(--rd-cream); font-size: 13px; font-weight: 500; line-height: 1.35; opacity: 0; pointer-events: none; transition: opacity .2s ease, translate .2s ease; z-index: 30; box-shadow: var(--shadow-soft); }
-.vibe-chip:hover .class-tip, .vibe-chip:focus-visible .class-tip { opacity: 1; translate: -50% 0; transition-delay: .25s; }
-.booking-console .crew-stepper { color: var(--rd-indigo); font-weight: 600; gap: 10px; }
-.booking-console .crew-stepper button { width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--border-strong); background: var(--rd-white); color: var(--rd-indigo); }
-.booking-console .crew-stepper button:hover:not(:disabled) { border-color: var(--rd-indigo); background: var(--rd-white); color: var(--rd-indigo); transform: none; }
-.booking-console .crew-stepper button:disabled { opacity: .4; }
-.booking-console .crew-stepper strong { font-size: 18px; font-weight: 700; min-width: 22px; }
-.quota-field { display: inline-flex; align-items: center; gap: 10px; }
-.quota-select { position: relative; display: inline-flex; align-items: center; }
-.quota-select select { appearance: none; height: 40px; padding: 0 36px 0 14px; border-radius: 12px; border: 1.5px solid var(--border-strong); background: var(--rd-white); color: var(--rd-indigo); font: 600 14px var(--font-body); cursor: pointer; }
-.quota-select select:hover { border-color: var(--rd-indigo); }
-.quota-select svg { position: absolute; right: 12px; pointer-events: none; color: var(--rd-indigo); }
+.booking-console .booking-controls { border-top: 0; background: transparent; padding: 12px 16px 16px; grid-template-columns: minmax(0, 1fr); align-items: center; }
 .booking-console .journey-button { height: 56px; border-radius: 12px; background: var(--rd-marigold); color: var(--rd-indigo); border: 0; justify-content: center; gap: 10px; font-weight: 700; box-shadow: 0 8px 22px -10px oklch(0.6 0.15 80 / 70%); }
 .booking-console .journey-button > *, .booking-console .journey-button svg { color: var(--rd-indigo); }
 .booking-console .journey-title { font-size: 17px; font-weight: 700; }
 .booking-console .journey-button svg { transition: transform .25s; }
 .booking-console .journey-button:hover svg { transform: translateX(3px); }
-.booking-console .form-error { color: var(--error); padding: 12px 24px 4px; margin: 0; }
 .station-suggestions { padding: 8px; }
 .suggestion-group { display: flex; align-items: center; gap: 6px; padding: 8px 12px 4px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--rd-muted); }
 .booking-console .station-suggestions button { height: 46px; gap: 10px; color: var(--rd-indigo); }
@@ -966,20 +894,24 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .last-search { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid oklch(1 0 0 / 22%); background: oklch(1 0 0 / 10%); color: var(--foreground); font-size: 14px; font-weight: 500; cursor: pointer; backdrop-filter: blur(10px); transition: background .2s, border-color .2s; }
 .last-search:hover { background: oklch(1 0 0 / 16%); border-color: oklch(1 0 0 / 40%); }
 .last-search-label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-helper); }
-@media (max-width: 940px) and (min-width: 761px) { .booking-console .booking-controls { grid-template-columns: 1fr; } }
+@media (min-width: 940px) {
+  .hero-dark .booking-console {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    align-items: center;
+  }
+  .hero-dark .booking-console .booking-form { grid-column: 1; grid-row: 1; }
+  .hero-dark .booking-console .booking-controls {
+    grid-column: 2; grid-row: 1; padding: 0 16px 0 6px;
+  }
+  .hero-dark .booking-console :is(.station-field, .date-button) { height: 112px; padding-block: 16px; }
+}
 @media (max-width: 760px) {
   .booking-console .source-field { border-radius: 20px 20px 0 0; padding-right: 22px; }
   .booking-console .destination-field { padding-left: 20px; }
   .booking-console .station-field input, .booking-console .date-value { font-size: 20px; }
   .booking-form .swap-button.swap-button { --base: 0deg; left: auto; top: auto; width: 44px; height: 44px; margin: -22px 0; }
   .booking-console .booking-controls { grid-template-columns: 1fr; }
-  .booking-console .controls-panel { display: flex; flex-direction: column; align-items: stretch; }
-  .booking-console .vibe-chip { height: 44px; }
-  .booking-console .crew-stepper button { width: 44px; height: 44px; }
-  .quota-field { justify-content: space-between; }
-  .quota-field .controls-label { display: inline; }
-  .quota-select select { height: 44px; }
-  .class-tip { display: none; }
   .booking-controls .journey-button.journey-button { background: var(--rd-marigold); color: var(--rd-indigo); border-radius: 12px; }
   .last-search { font-size: 13px; }
   .booking-console .station-field.sheet-open { background: var(--rd-cream) !important; }
@@ -990,9 +922,6 @@ body { font-size: var(--text-body); line-height: 1.5; }
 @media (max-width: 640px) {
   .booking-console { margin-bottom: 16px; }
   .railway-app { padding-bottom: 96px; }
-  .booking-console .booking-controls { background: transparent; }
-  .booking-console .vibe-chip { justify-content: center; padding-inline: 14px; }
-  .booking-console .vibe-chip.on { box-shadow: none; }
   .booking-console .station-field label, .booking-console .field-label { color: var(--rd-muted); }
   .booking-console .field-hint { font-size: 13px; color: color-mix(in oklch, var(--rd-muted) 55%, var(--rd-cream)); }
 }
@@ -1120,7 +1049,7 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .offer-chip.waitlist .offer-status { color: var(--error); }
 .offer-chip.on { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 30%, transparent); }
 .offer-chip.on .offer-status { color: var(--primary-foreground); }
-.offer-chip:focus-visible, .seat:focus-visible, .alt-chip:focus-visible, .pay-tabs button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+.offer-chip:focus-visible, .alt-chip:focus-visible, .pay-tabs button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 .status-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
 .status-tag.waitlist { color: var(--error); background: color-mix(in oklch, var(--error) 10%, transparent); }
 .alternates { border-top: 1px dashed var(--border); padding-top: 16px; display: grid; gap: 8px; }
@@ -1129,23 +1058,11 @@ body { font-size: var(--text-body); line-height: 1.5; }
 .alt-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); color: var(--foreground); font-size: 14px; font-weight: 600; text-decoration: none; }
 .alt-chip:hover { border-color: var(--foreground); }
 
-/* Seats */
-.seat-legend { display: flex; gap: 16px; font-size: 14px; color: var(--muted-foreground); margin-bottom: 16px; }
-.seat-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.seat-key { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border); background: var(--card); }
-.seat-key.on { background: var(--primary); border-color: var(--primary); }
-.seat-key.taken { background: var(--secondary); }
-.coach { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
-.bay { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; border-radius: var(--radius-sm-ui); background: var(--background); }
-.seat { min-height: 48px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--foreground); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; line-height: 1.1; }
-.seat b { font-size: 15px; }
-.seat:disabled { background: var(--secondary); color: color-mix(in oklch, var(--foreground) 40%, transparent); cursor: not-allowed; text-decoration: line-through; }
-.seat.on { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
 
 /* Forms */
 .pax-form { display: flex; flex-direction: column; gap: 16px; }
+.passenger-count .form-field { max-width: 240px; }
 .pax-legend { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; padding: 0; margin-bottom: 16px; float: left; width: 100%; }
-.pax-legend span { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
 .form-grid { clear: both; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; }
 .form-grid.two { grid-template-columns: 1fr 1fr; }
 .form-grid .span-2 { grid-column: 1 / -1; }
@@ -1239,7 +1156,6 @@ body { font-size: var(--text-body); line-height: 1.5; }
   .flow-title { font-size: 28px; }
   .flow-card, .train-card { padding: 16px; }
   .class-offers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .coach { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .form-grid, .form-grid.two { grid-template-columns: 1fr 1fr; }
   .form-grid > .form-field:first-child { grid-column: 1 / -1; }
   .form-grid.two > .form-field { grid-column: 1 / -1; }
@@ -1253,15 +1169,11 @@ body { font-size: var(--text-body); line-height: 1.5; }
   .fare-bar-total { font-size: 22px; font-weight: 700; }
   .fare-bar-inner .flow-cta { flex: none; height: 52px; padding-inline: clamp(12px, 4vw, 24px); }
   .flow-trip, .train-name { overflow-wrap: anywhere; }
-  .train-head, .seat-legend, .offer-top { flex-wrap: wrap; }
+  .train-head, .offer-top { flex-wrap: wrap; }
   .train-head { gap: 8px; }
   .offer-chip { min-width: 0; padding-inline: 8px; white-space: normal; }
   .train-times { grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; }
   .train-duration { text-align: center; }
-}
-
-@media (max-width: 380px) {
-  .coach { grid-template-columns: 1fr; }
 }
 
 /* Mobile-first refinements */
@@ -1275,15 +1187,13 @@ body { font-size: var(--text-body); line-height: 1.5; }
   /* Phones: no floating specks, no train silhouette, no city marquee. */
   .night-fireflies, .night-train-track { display: none; }
   .route-marquee { display: none; }
-  .booking-console .vibe-chips { display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: visible; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; padding: 4px; margin: -4px; width: calc(100% + 8px); }
-  .booking-console .vibe-chip { flex: 0 0 auto; min-width: 64px; height: 44px; scroll-snap-align: start; }
 }
 
 /* Shared motion timing comes from src/lib/motion.ts via MotionSystem.
    Disable legacy entrances even before hydration; Framer owns those transforms.
    Never transform containers holding fixed phone controls or station sheets. */
 .reveal, .pop, h1 .line > span, .lights-backdrop, .status-dot,
-.crew-stepper strong, .vibe-chip.on svg, .mobile-menu,
+.mobile-menu,
 .station-field::after, .date-button::after {
   animation: none;
 }
@@ -1311,11 +1221,10 @@ body { font-size: var(--text-body); line-height: 1.5; }
   transform: none;
   transition: rotate var(--motion-standard) var(--motion-ease-transition);
 }
-.motion-ready .booking-console .crew-stepper button:active { transform: none; }
 .motion-ready .theme-toggle:hover { transform: none; }
 .motion-ready .info-cta:hover { filter: none; }
 .motion-ready .date-button:hover { filter: none; }
-.motion-ready .ai-tip, .motion-ready .class-tip, .motion-ready .route-go {
+.motion-ready .ai-tip, .motion-ready .route-go {
   transition-duration: var(--motion-micro);
   transition-timing-function: var(--motion-ease-transition);
 }
@@ -1425,8 +1334,9 @@ html.lenis, html.lenis body { height: auto; }
 .booking-console .station-field label, .booking-console .field-label { transform-origin: left center; transition: transform var(--motion-standard) var(--motion-ease-entrance); letter-spacing: 0; }
 .booking-console .station-field:focus-within label, .booking-console .date-button:focus-visible .field-label { transform: translateY(-4px) scale(.96); }
 .booking-console .station-field input:focus-visible { box-shadow: none; }
-.booking-console .station-field.field-invalid, .booking-console .date-button.field-invalid { box-shadow: inset 0 0 0 2px var(--error); }
-.booking-console .field-invalid .field-focus-glow { opacity: 0; }
+.booking-console :is(.station-field, .date-button).field-invalid { box-shadow: inset 0 -2px color-mix(in oklch, var(--error) 55%, transparent); }
+.booking-console .field-hint.search-field-error { color: var(--error); font-size: 13px; line-height: 1.25; white-space: normal; text-align: left; }
+.booking-console .search-field-error svg { flex: none; }
 .station-suggestions { transform-origin: top center; transition: none !important; }
 .suggestion-motion-row { position: relative; transition: none !important; }
 .station-suggestions button { position: relative; isolation: isolate; }
@@ -1434,9 +1344,6 @@ html.lenis, html.lenis body { height: auto; }
 .booking-console .station-suggestions button:hover, .booking-console .station-suggestions button.active, .booking-console .station-suggestions button[aria-selected="true"] { background: transparent; }
 .selection-highlight { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: var(--primary); z-index: 0; transition: none !important; }
 .station-suggestions .selection-highlight { background: var(--accent); }
-.booking-console .vibe-chip { position: relative; isolation: isolate; min-width: 60px; padding-inline: 8px; }
-.booking-console .vibe-chip.on { background: transparent; box-shadow: none; border-color: transparent; }
-.vibe-chip .selection-highlight { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary); }
 .class-choice-content { display: inline-flex; align-items: center; gap: 4px; position: relative; z-index: 1; }
 .class-check-slot { width: 14px; height: 14px; display: inline-flex; flex: none; }
 .class-check-slot:empty { width: 0; }
@@ -1445,8 +1352,6 @@ html.lenis, html.lenis body { height: auto; }
 .swap-glyph { display: inline-flex; transition: none !important; }
 .swap-city-ghost { position: absolute; left: 24px; right: 40px; top: 58px; font-size: 22px; font-weight: 700; color: var(--foreground); white-space: nowrap; overflow: hidden; pointer-events: none; transition: none !important; }
 .destination-field .swap-city-ghost { left: 44px; }
-.booking-console .rolling-number { position: relative; display: inline-block; width: 24px; height: 28px; min-width: 24px; overflow: hidden; font-size: 18px; font-variant-numeric: tabular-nums; }
-.rolling-number > span:not(.sr-only) { position: absolute; inset: 0; display: grid; place-items: center; transition: none !important; }
 .search-action { position: relative; overflow: hidden; isolation: isolate; transition: none !important; }
 .search-action-label { position: relative; z-index: 1; display: grid; place-items: center; width: 160px; height: 24px; }
 .search-action-state { display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: none !important; }
@@ -1456,7 +1361,7 @@ html.lenis, html.lenis body { height: auto; }
 .search-spinner { animation: search-spin .8s linear infinite; }
 .booking-console .search-action .search-spinner, .booking-console .search-action:hover .search-spinner { transition: none; }
 @keyframes search-spin { to { transform: rotate(360deg); } }
-.search-submitting .booking-form, .search-submitting .controls-panel { pointer-events: none; }
+.search-submitting .booking-form { pointer-events: none; }
 .calendar-motion-surface { display: flex; flex-direction: column; min-height: 0; transition: none !important; }
 .date-dialog .quick-dates button > span { display: inline-block; transition: none !important; }
 .micro-calendar button[data-day] { position: relative; isolation: isolate; }
@@ -1549,15 +1454,6 @@ html.lenis, html.lenis body { height: auto; }
     align-self: center; flex-shrink: 0; margin: -22px 0;
   }
   .hero-dark .booking-console .booking-controls { grid-template-columns: minmax(0, 1fr); }
-  .hero-dark .booking-console .controls-panel {
-    display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; min-width: 0;
-  }
-  .hero-dark .booking-console .vibe-chips {
-    display: flex; flex-wrap: wrap; gap: 8px; width: auto; max-width: 100%;
-    margin: 0; padding: 0; overflow: visible;
-  }
-  .hero-dark .booking-console .crew-stepper,
-  .hero-dark .booking-console .quota-field { flex-wrap: wrap; min-width: 0; }
 }
 @media (max-width: 760px) {
   .hero-dark .site-header {
@@ -1569,7 +1465,6 @@ html.lenis, html.lenis body { height: auto; }
   .hero-dark .journey-stage {
     padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
-  .hero-dark .quota-field { scroll-margin-bottom: 96px; }
 }
 @media (max-width: 640px) {
   .hero-dark .site-header { gap: 16px; }
@@ -1581,7 +1476,7 @@ html.lenis, html.lenis body { height: auto; }
 .booking-console .date-button.date-open { border-color: var(--rd-marigold); }
 .date-button { position: relative; }
 .date-button .date-chevron { position: absolute; top: 14px; right: 14px; transition: transform 180ms ease-out; }
-.date-button.date-open .date-chevron { color: var(--rd-marigold); }
+.date-button.date-open .date-chevron { color: var(--rd-marigold); transform: rotate(180deg); }
 .date-panel { position: fixed; z-index: 1000; width: min(340px, calc(100vw - 32px)); padding: 16px; border-radius: 20px; background: var(--rd-cream); color: var(--rd-indigo); border: 1px solid color-mix(in oklab, var(--rd-indigo) 10%, transparent); box-shadow: 0 1px 2px color-mix(in oklab, var(--rd-indigo) 8%, transparent), 0 8px 24px color-mix(in oklab, var(--rd-indigo) 12%, transparent), 0 24px 48px color-mix(in oklab, var(--rd-indigo) 14%, transparent); font-family: var(--font-sans, Inter, sans-serif); }
 .dp-notch { position: absolute; top: -7px; left: calc(var(--dp-notch) - 7px); width: 14px; height: 14px; background: var(--rd-cream); border-left: 1px solid color-mix(in oklab, var(--rd-indigo) 10%, transparent); border-top: 1px solid color-mix(in oklab, var(--rd-indigo) 10%, transparent); transform: rotate(45deg); border-top-left-radius: 3px; }
 .date-panel.up .dp-notch { top: auto; bottom: -7px; transform: rotate(225deg); }
@@ -1623,7 +1518,6 @@ html.lenis, html.lenis body { height: auto; }
 @media (max-width: 640px) {
   .hero-dark .booking-console { padding: 16px; border-radius: 20px; }
   .hero-dark .booking-console .booking-form { gap: 8px; }
-  .hero-dark .booking-console .form-error { padding: 8px 0 0; }
 
   /* From and To share one block: two single-line rows, thin divider, swap pinned right. */
   .hero-dark .booking-console .route-block {
@@ -1642,7 +1536,7 @@ html.lenis, html.lenis body { height: auto; }
     height: 100%; margin: 0; padding: 0; border-radius: 0;
     font-size: 17px; font-weight: 700; text-overflow: ellipsis;
   }
-  .hero-dark .booking-console .route-block .station-field:not(.sheet-open) .field-hint,
+  .hero-dark .booking-console .route-block .station-field:not(.sheet-open) .field-hint:not(.search-field-error),
   .hero-dark .booking-console .route-block .station-field:not(.sheet-open) .field-focus-glow { display: none; }
   .hero-dark .booking-console .route-block .swap-button.swap-button {
     position: absolute; left: auto; right: 6px; top: 50%; margin: -22px 0 0; align-self: auto;
@@ -1651,8 +1545,12 @@ html.lenis, html.lenis body { height: auto; }
   .hero-dark .booking-console .route-block .swap-city-ghost,
   .hero-dark .booking-console .route-block .destination-field .swap-city-ghost { top: 15px; left: 14px; right: 62px; font-size: 17px; }
   .hero-dark .booking-console .route-block:has(.station-field:focus-within) { border-color: var(--rd-marigold); box-shadow: 0 0 22px -8px color-mix(in oklch, var(--rd-marigold) 55%, transparent); }
-  .hero-dark .booking-console .route-block:has(.field-invalid) { border-color: var(--error); }
-  .hero-dark .booking-console .route-block .station-field.field-invalid { background: color-mix(in oklch, var(--error) 6%, var(--rd-white)); box-shadow: none; }
+  .hero-dark .booking-console .route-block .station-field.field-invalid:not(.sheet-open) {
+    display: grid; grid-template-columns: 16px minmax(0, 1fr); row-gap: 0;
+    height: auto; padding-block: 5px 9px; box-shadow: none;
+  }
+  .hero-dark .booking-console .route-block .station-field.field-invalid:not(.sheet-open) input { min-height: 38px; }
+  .hero-dark .booking-console .route-block .search-field-error { grid-column: 2; }
 
   /* Date: one 56px row with the quick chips on the right edge. */
   .hero-dark .booking-console .date-row {
@@ -1663,16 +1561,19 @@ html.lenis, html.lenis body { height: auto; }
     display: flex; flex-direction: row; align-items: center; gap: 10px;
     flex: 1 1 auto; min-width: 0; min-height: 0; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent;
   }
-  .hero-dark .booking-console .date-row .date-button :is(.field-label, .date-value, .field-hint, .date-chevron, .field-focus-glow) { display: none; }
+  .hero-dark .booking-console .date-row .date-button :is(.field-label, .date-value, .field-hint:not(.search-field-error), .date-chevron, .field-focus-glow) { display: none; }
   .hero-dark .booking-console .date-row .date-value-short {
     display: inline-flex; align-items: center; gap: 8px; min-width: 0;
     font-size: 17px; font-weight: 700; color: var(--rd-indigo);
     white-space: normal; line-height: 1.15; text-align: left;
   }
   .hero-dark .booking-console .date-row .date-value-short svg { flex: none; color: var(--rd-muted); }
-  .hero-dark .booking-console .date-row .date-button.field-invalid { background: color-mix(in oklch, var(--error) 6%, var(--rd-white)); box-shadow: none; }
+  .hero-dark .booking-console .date-row:has(.field-invalid) { height: auto; min-height: 56px; }
+  .hero-dark .booking-console .date-row .date-button.field-invalid {
+    flex-direction: column; align-items: flex-start; justify-content: center;
+    gap: 4px; height: auto; min-height: 56px; padding-block: 8px; box-shadow: none;
+  }
   .hero-dark .booking-console .date-row:has(.date-open), .hero-dark .booking-console .date-row:focus-within { border-color: var(--rd-marigold); box-shadow: 0 0 22px -8px color-mix(in oklch, var(--rd-marigold) 55%, transparent); }
-  .hero-dark .booking-console .date-row:has(.field-invalid) { border-color: var(--error); }
   .hero-dark .booking-console .date-quick { display: flex; flex: none; gap: 6px; }
   .hero-dark .booking-console .date-quick button {
     min-height: 44px; padding: 0 9px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--rd-indigo) 20%, transparent);
@@ -1688,49 +1589,6 @@ html.lenis, html.lenis body { height: auto; }
 @media (max-width: 760px) {
   .railway-app.cta-floating .booking-area { z-index: 45; }
 }
-
-/* Mobile class/passengers/quota summary row + bottom sheet */
-.prefs-summary { display: none; }
-.prefs-sheet-root { position: fixed; inset: 0; z-index: 70; }
-.prefs-sheet-backdrop { position: absolute; inset: 0; border: 0; background: oklch(0 0 0 / 55%); cursor: default; }
-.prefs-sheet {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  max-height: calc(100dvh - 12px); overflow-y: auto; overscroll-behavior-y: contain;
-  background: var(--rd-cream); color: var(--rd-indigo);
-  border-radius: 20px 20px 0 0; padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -18px 50px oklch(0 0 0 / 35%);
-  animation: prefs-sheet-up 220ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.prefs-sheet-handle { display: block; width: 40px; height: 4px; border-radius: 999px; background: oklch(0.265 0.055 270.6 / 25%); margin: 0 auto 12px; }
-.prefs-sheet-body { display: flex; flex-direction: column; gap: 14px; }
-.prefs-sheet-body .controls-label { display: none; }
-.prefs-sheet-body .controls-divider { display: none; }
-.prefs-sheet-body .vibe-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.prefs-sheet-body .crew-stepper { justify-content: space-between; }
-.prefs-sheet-body .quota-field { display: flex; flex-direction: column; gap: 6px; }
-.prefs-sheet-body .quota-field .controls-label { display: none; }
-.prefs-sheet-body .quota-field { display: block; }
-.prefs-sheet-done { width: 100%; margin-top: 16px; height: 48px; }
-@keyframes prefs-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .prefs-sheet { animation: none; } }
-
-@media (max-width: 640px) {
-  .prefs-summary {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    min-height: 48px; padding: 6px 16px; border-radius: 12px;
-    background: var(--rd-white); border: 1px solid var(--border);
-    color: var(--rd-indigo); font: inherit; font-size: 14px; font-weight: 600;
-    cursor: pointer;
-  }
-  .prefs-summary-text { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; text-align: left; }
-  .prefs-dot { width: 3px; height: 3px; border-radius: 999px; background: var(--rd-muted); flex: none; }
-  .prefs-summary svg { color: var(--rd-muted); flex: none; }
-  .booking-console .booking-controls .controls-panel { display: none; }
-}
-.rolling-number, .rolling-number > span { pointer-events: none; }
-.prefs-sheet .vibe-chip { position: relative; isolation: isolate; height: 44px; padding: 0 14px; border-radius: 12px; background: var(--rd-white); border: 1px solid var(--border-strong); color: var(--rd-indigo); font-weight: 600; }
-.prefs-sheet .crew-stepper { color: var(--rd-indigo); font-weight: 600; }
-.prefs-sheet .crew-stepper button { width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--border-strong); background: var(--rd-white); color: var(--rd-indigo); }
 
 /* Phone hero tidy-up: compact headline, no specks/train/marquee (desktop untouched). */
 @media (max-width: 760px) {
@@ -1763,7 +1621,7 @@ html.lenis, html.lenis body { height: auto; }
   .mode-switch-pill { position: absolute; inset: 0; border-radius: 10px; background: var(--rd-marigold); z-index: 0; }
   .mode-switch-label { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
   .booking-console[data-mode="ai"] > :not(.mode-switch, .ask-pane, .booking-landing-surface, .booking-landing-shadow) { display: none !important; }
-  .booking-console[data-mode="search"] > .booking-form, .booking-console[data-mode="search"] > .prefs-summary, .ask-pane { animation: mode-fade 200ms ease-out; }
+  .booking-console[data-mode="search"] > .booking-form, .ask-pane { animation: mode-fade 200ms ease-out; }
   .ask-pane { display: flex; flex-direction: column; gap: 12px; }
   .ask-box { position: relative; border-radius: 16px; background: var(--rd-white); border: 1px solid var(--border-strong); padding: 14px 14px 56px; }
   .ask-box:focus-within { border-color: var(--rd-marigold); box-shadow: 0 0 0 3px color-mix(in oklch, var(--rd-marigold) 25%, transparent); }
@@ -1775,8 +1633,6 @@ html.lenis, html.lenis body { height: auto; }
   .ask-send { border: 0; background: var(--rd-marigold); color: var(--rd-indigo); }
   .ask-chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .ask-chips button { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--rd-white); color: var(--rd-indigo); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .booking-console .prefs-summary { width: 100%; box-sizing: border-box; margin-top: 8px; }
-  .booking-console .booking-controls { border-top: 0; }
 }
 @keyframes ask-shimmer { 0%, 80% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 @keyframes mode-fade { from { opacity: 0; } to { opacity: 1; } }

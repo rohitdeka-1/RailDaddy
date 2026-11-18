@@ -35,15 +35,17 @@ function Results() {
   const [expanded, setExpanded] = useState<string[]>([]);
   const navigate = useNavigate();
   const trains = sampleTrains(trip.from, trip.to, trip.date);
-  const [pick, setPick] = useState<{ train: string; cls: string } | null>(null);
+  const [pick, setPick] = useState<{ train: string; cls: string } | null>(() => trip.train ? { train: trip.train, cls: trip.cls } : null);
   const picked = pick && trains.find((t) => t.number === pick.train)?.offers.find((o) => o.cls === pick.cls);
   const isFull = (t: Train) => t.offers.every((o) => o.status === "Waitlist");
-  const go = () => pick && navigate({ to: "/seats", search: { ...trip, train: pick.train, cls: pick.cls } });
+  const continueToPassengers = <Button variant="journey" className="flow-cta" disabled={!picked} onClick={() => {
+    if (pick && picked) void navigate({ to: "/passengers", search: { ...trip, train: pick.train, cls: pick.cls } });
+  }}>Add passengers <ArrowRight size={18} /></Button>;
 
   return (
     <BookingShell step={1} trip={trip}
       back={<Link to="/">Edit search</Link>}
-      bar={<FareBar note={picked && pick ? `${pick.cls} · ${trip.pax} passenger${trip.pax > 1 ? "s" : ""}` : "Pick a class to continue"} total={picked ? rupees(picked.fare * trip.pax) : "—"} action={<Button variant="journey" className="flow-cta" disabled={!picked} onClick={go}>Choose seats <ArrowRight size={18} /></Button>} />}>
+      bar={<FareBar note={picked && pick ? `${pick.cls} · per passenger` : "Pick a class to continue"} total={picked ? rupees(picked.fare) : "—"} action={continueToPassengers} />}>
       <div className="flow-title-row">
         <h1 className="flow-title">{trains.length} trains · {tripDateLabel(trip.date)}</h1>
         <p className="flow-sub">Sample timings and fares — live availability isn’t connected yet.</p>
@@ -76,15 +78,15 @@ function Results() {
                 })}
               </div>
               <Button variant="ghost" className="train-details-toggle" aria-expanded={expanded.includes(t.number)} aria-controls={`details-${t.number}`} onClick={() => setExpanded(current => current.includes(t.number) ? current.filter(n => n !== t.number) : [...current, t.number])}>Journey details <motion.span animate={{ rotate: expanded.includes(t.number) ? 180 : 0 }} transition={{ duration: reduced ? 0 : motionTokens.duration.micro }}><ChevronDown size={16} /></motion.span></Button>
-              <AnimatePresence initial={false}>{expanded.includes(t.number) && <motion.div id={`details-${t.number}`} className="train-expansion" initial={{ height: reduced ? 'auto' : 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} transition={{ duration: reduced ? 0 : bookingMotion.expand, ease: motionTokens.easing.transition }}><motion.div className="train-details" initial={{ opacity: reduced ? 1 : 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : motionTokens.duration.micro, delay: reduced ? 0 : bookingMotion.expand }}><span><TrainFront size={16} />{trip.from} → {trip.to}</span><span><Clock size={16} />{t.duration} · {t.depart}–{t.arrive}</span><span><CalendarDays size={16} />{tripDateLabel(trip.date)} · {trip.quota} quota</span></motion.div></motion.div>}</AnimatePresence>
+              <AnimatePresence initial={false}>{expanded.includes(t.number) && <motion.div id={`details-${t.number}`} className="train-expansion" initial={{ height: reduced ? 'auto' : 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} transition={{ duration: reduced ? 0 : bookingMotion.expand, ease: motionTokens.easing.transition }}><motion.div className="train-details" initial={{ opacity: reduced ? 1 : 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : motionTokens.duration.micro, delay: reduced ? 0 : bookingMotion.expand }}><span><TrainFront size={16} />{trip.from} → {trip.to}</span><span><Clock size={16} />{t.duration} · {t.depart}–{t.arrive}</span><span><CalendarDays size={16} />{tripDateLabel(trip.date)}</span></motion.div></motion.div>}</AnimatePresence>
               {full && <Alternates trip={trip} trains={trains.filter((x) => !isFull(x) && x.number !== t.number).slice(0, 2)} />}
             </motion.li>
           );
         })}
       </motion.ul>}
       <div className="flow-desktop-cta">
-        {picked && pick ? <p>{pick.cls} on #{pick.train} · <strong>{rupees(picked.fare * trip.pax)}</strong> for {trip.pax}</p> : <p>Pick a class on any train to continue.</p>}
-        <Button variant="journey" className="flow-cta" disabled={!picked} onClick={go}>Choose seats <ArrowRight size={18} /></Button>
+        {picked && pick ? <p>{pick.cls} on #{pick.train} · <strong>{rupees(picked.fare)}</strong> per passenger</p> : <p>Pick a class on any train to continue.</p>}
+        {continueToPassengers}
       </div>
     </BookingShell>
   );

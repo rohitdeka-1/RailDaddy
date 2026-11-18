@@ -3,10 +3,6 @@ import { flushSync } from "react-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { motionTokens, themeRevealRadius } from "@/lib/motion";
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 
 export function ThemeToggle({ theme, onChange }: { theme: "light" | "dark"; onChange: (theme: "light" | "dark") => void }) {
   const reduced = useReducedMotion();

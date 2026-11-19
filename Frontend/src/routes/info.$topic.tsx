@@ -50,7 +50,7 @@ const topics: Record<string, Topic> = {
     intro: "Short version: we keep as little as possible, and nothing leaves your device in this build.",
     points: [
       { heading: "What is stored on your device", body: "Your recent stations and your last search are saved in this browser only, so the page can offer them again next visit. Clearing site data removes them." },
-      { heading: "Accounts", body: "This preview has no sign-in, so there is no profile, no booking history and no payment data held on a server." },
+      { heading: "Accounts", body: "When you create an account, we store your sign-in email, a password hash, and your profile details. The booking preview does not store booking history or payment data on the server." },
       { heading: "When bookings go live", body: "Personal details will be shared with the authorized channel that issues your ticket, and used only to complete that booking." },
     ],
     closing: "Questions about a specific detail? Ask us from the Contact page.",

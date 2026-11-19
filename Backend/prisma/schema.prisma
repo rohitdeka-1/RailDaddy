@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  cognitoSub  String   @unique
-  email       String?  @unique
-  displayName String?
-  preferences Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  loginEmail   String?  @unique
+  passwordHash String?
+  email        String?  @unique
+  displayName  String?
+  preferences  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 

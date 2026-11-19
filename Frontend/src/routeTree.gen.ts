@@ -10,15 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PassengersRouteImport } from './routes/passengers'
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as SeatsRouteImport } from './routes/seats'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TrainsRouteImport } from './routes/trains'
 import { Route as InfoTopicRouteImport } from './routes/info.$topic'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PassengersRoute = PassengersRouteImport.update({
@@ -36,6 +49,11 @@ const SeatsRoute = SeatsRouteImport.update({
   path: '/seats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrainsRoute = TrainsRouteImport.update({
   id: '/trains',
   path: '/trains',
@@ -49,50 +67,82 @@ const InfoTopicRoute = InfoTopicRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/login': typeof LoginRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
   '/seats': typeof SeatsRoute
+  '/signup': typeof SignupRoute
   '/trains': typeof TrainsRoute
   '/info/$topic': typeof InfoTopicRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/login': typeof LoginRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
   '/seats': typeof SeatsRoute
+  '/signup': typeof SignupRoute
   '/trains': typeof TrainsRoute
   '/info/$topic': typeof InfoTopicRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/login': typeof LoginRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
   '/seats': typeof SeatsRoute
+  '/signup': typeof SignupRoute
   '/trains': typeof TrainsRoute
   '/info/$topic': typeof InfoTopicRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/passengers' | '/payment' | '/seats' | '/trains' | '/info/$topic'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/passengers' | '/payment' | '/seats' | '/trains' | '/info/$topic'
-  id:
-    | '__root__'
     | '/'
+    | '/account'
+    | '/login'
     | '/passengers'
     | '/payment'
     | '/seats'
+    | '/signup'
+    | '/trains'
+    | '/info/$topic'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/account'
+    | '/login'
+    | '/passengers'
+    | '/payment'
+    | '/seats'
+    | '/signup'
+    | '/trains'
+    | '/info/$topic'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/login'
+    | '/passengers'
+    | '/payment'
+    | '/seats'
+    | '/signup'
     | '/trains'
     | '/info/$topic'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  LoginRoute: typeof LoginRoute
   PassengersRoute: typeof PassengersRoute
   PaymentRoute: typeof PaymentRoute
   SeatsRoute: typeof SeatsRoute
+  SignupRoute: typeof SignupRoute
   TrainsRoute: typeof TrainsRoute
   InfoTopicRoute: typeof InfoTopicRoute
 }
@@ -104,6 +154,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/passengers': {
@@ -127,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trains': {
       id: '/trains'
       path: '/trains'
@@ -146,9 +217,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  LoginRoute: LoginRoute,
   PassengersRoute: PassengersRoute,
   PaymentRoute: PaymentRoute,
   SeatsRoute: SeatsRoute,
+  SignupRoute: SignupRoute,
   TrainsRoute: TrainsRoute,
   InfoTopicRoute: InfoTopicRoute,
 }

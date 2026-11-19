@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts",
-    "dev": "nodemon --watch src --ext ts,json --exec \"node --import tsx\" src/server.ts",
+    "dev": "nodemon --signal SIGTERM --watch src --ext ts,json --exec \"node --import tsx\" src/server.ts",
+    "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node -e \"require('node:fs').cpSync('src/generated/prisma', 'dist/generated/prisma', { recursive: true })\"",
     "postinstall": "prisma skills sync || exit 0"
   },
   "keywords": [],
@@ -17,19 +18,25 @@
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
-    "aws-jwt-verify": "^5.2.1",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^18.0.5",
-    "fastify": "5.12.5",
-    "fastify-plugin": "6.0.0",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.5",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.1",
     "typescript": "^7.0.2",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.19.1",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
     "nodemon": "3.1.14",
     "prisma": "7.10.0",
+    "supertest": "^7.3.2",
     "tsx": "4.23.15"
   }
 }

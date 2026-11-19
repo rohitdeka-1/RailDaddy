@@ -1,62 +1,80 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import Fastify from "fastify";
-import { CognitoJwtVerifier } from "aws-jwt-verify";
+import { buildApp } from "../src/app.js";
 import { envConfig } from "../src/config/envConfig.js";
-import authPlugin from "../src/plugins/auth.js";
-import usersRoutes from "../src/modules/users/routes/users.routes.js";
-import { UsersRepository } from "../src/modules/users/repositories/users.repository.js";
-import type { User } from "../src/generated/prisma/index.js";
+import jwt from "jsonwebtoken";
+import request from "supertest";
+import { Prisma } from "../src/generated/prisma/index.js";
+import type { PrismaClient } from "../src/generated/prisma/index.js";
+import { usersRepository } from "../src/modules/users/repositories/users.repository.js";
 
-test("verified requests provision profiles; invalid tokens never reach the database", async (context) => {
-  const originalPool = envConfig.COGNITO_USER_POOL_ID;
-  const originalClient = envConfig.COGNITO_CLIENT_ID;
-  envConfig.COGNITO_USER_POOL_ID = "us-east-1_test";
-  envConfig.COGNITO_CLIENT_ID = "test-client";
-  const records = new Map<string, User>();
-  let databaseCalls = 0;
-  let databaseFailed = false;
-  context.mock.method(CognitoJwtVerifier, "create", () => ({
-    async verify(token: string) {
-      if (token !== "valid") throw new Error("Invalid token");
-      return { sub: "user-a" };
-    },
-  }));
-  context.mock.method(UsersRepository.prototype, "findOrCreate", async (sub: string) => {
-    databaseCalls++;
-    if (databaseFailed) throw new Error("Database unavailable");
-    let user = records.get(sub);
-    if (!user) {
-      user = { id: "internal-id", cognitoSub: sub, displayName: null, email: null, preferences: null, createdAt: new Date(), updatedAt: new Date() };
-      records.set(sub, user);
+test("signup and login issue a JWT cookie, and only a valid session can read a profile", async (context) => {
+  const secret = "test-only-signing-secret-at-least-32-bytes";
+  const accounts = new Map<string, { id: string; displayName: string; passwordHash: string }>();
+  async function create({
+    data,
+  }: { data: { loginEmail: string; displayName: string; passwordHash: string } }) {
+    if (accounts.has(data.loginEmail)) {
+      throw new Prisma.PrismaClientKnownRequestError("Duplicate email", {
+        code: "P2002",
+        clientVersion: Prisma.prismaVersion.client,
+      });
     }
-    return user;
-  });
-  context.mock.method(UsersRepository.prototype, "findByCognitoSub", async (sub: string) => records.get(sub) ?? null);
-  const app = Fastify();
-  app.register(authPlugin);
-  app.register(usersRoutes, { prefix: "/users" });
-  try {
-    for (const authorization of ["", "Bearer invalid", "Basic valid"]) {
-      const response = await app.inject({ url: "/users/me", headers: { authorization } });
-      assert.equal(response.statusCode, 401);
-    }
-    assert.equal(databaseCalls, 0);
-    const headers = { authorization: "Bearer valid" };
-    const first = await app.inject({ url: "/users/me", headers });
-    assert.equal(first.statusCode, 200);
-    assert.equal(first.json().cognitoSub, "user-a");
-    assert.equal(first.json().displayName, null);
-    const user = records.get("user-a")!;
-    user.displayName = "Rohit";
-    const next = await app.inject({ url: "/users/me", headers });
-    assert.equal(next.json().displayName, "Rohit");
-    assert.equal(records.size, 1);
-    databaseFailed = true;
-    assert.equal((await app.inject({ url: "/users/me", headers })).statusCode, 500);
-  } finally {
-    await app.close();
-    envConfig.COGNITO_USER_POOL_ID = originalPool;
-    envConfig.COGNITO_CLIENT_ID = originalClient;
+    const account = { id: "user-a", displayName: data.displayName, passwordHash: data.passwordHash };
+    accounts.set(data.loginEmail, account);
+    return { id: account.id };
   }
+  const findProfile = context.mock.method(usersRepository, "findById", async (id: string) => {
+    const account = [...accounts.values()].find((user) => user.id === id);
+    return account ? { id, displayName: account.displayName } : null;
+  });
+
+  const database = {
+    user: {
+      create,
+      findUnique: async ({ where }: { where: { loginEmail: string } }) => accounts.get(where.loginEmail) ?? null,
+    },
+  } as unknown as PrismaClient;
+  const originalSecret = envConfig.JWT_SECRET;
+  envConfig.JWT_SECRET = secret;
+  context.after(() => { envConfig.JWT_SECRET = originalSecret; });
+  const client = request(buildApp(database));
+
+  const profilePath = "/api/v1/users/me";
+  const expiredToken = jwt.sign({ sub: "user-a" }, secret, { issuer: "railsathi", expiresIn: -1 });
+  await client.get(profilePath).expect(401);
+  await client.get(profilePath).set("Cookie", "rail_session=invalid").expect(401);
+  await client.get(profilePath).set("Authorization", `Bearer ${expiredToken}`).expect(401);
+  assert.equal(findProfile.mock.callCount(), 0);
+
+  const credentials = { email: "Rider@example.com", password: "a long test password" };
+  const signup = (password: string) => client.post("/api/v1/auth/signup").send({
+    ...credentials, password, displayName: "Rider",
+  });
+  await signup("short").expect(400);
+  const created = await signup(credentials.password).expect(201);
+  assert.notEqual(accounts.get("rider@example.com")?.passwordHash, credentials.password);
+  await signup(credentials.password).expect(409);
+
+  const session = created.get("Set-Cookie")?.[0] ?? "";
+  assert.match(session, /HttpOnly/);
+  assert.match(session, /SameSite=Lax/);
+  assert.match(session, /Max-Age=3600/);
+  const cookie = session.split(";")[0]!;
+  const profile = await client.get(profilePath).set("Cookie", cookie).expect(200);
+  assert.equal(profile.body.displayName, "Rider");
+  assert.equal(profile.body.passwordHash, undefined);
+
+  const token = cookie.slice("rail_session=".length);
+  await client.get(profilePath).set("Authorization", `Bearer ${token}`).expect(200);
+
+  const login = (password: string) => client.post("/api/v1/auth/login").send({
+    email: " rider@example.com ", password,
+  });
+  await login("incorrect").expect(401);
+  await login(credentials.password).expect(204);
+
+  await client.post("/api/v1/auth/logout").expect(415);
+  const logout = await client.post("/api/v1/auth/logout").set("Cookie", cookie).send({}).expect(204);
+  assert.match(logout.get("Set-Cookie")?.[0] ?? "", /^rail_session=;/);
 });

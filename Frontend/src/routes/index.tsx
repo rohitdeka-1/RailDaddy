@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ArrowDownUp, ArrowUpRight, CalendarDays, MapPin, Menu, MessageCircle, Sparkles, TrainFront, AlertCircle, X, History, ChevronDown, ShieldCheck, RotateCcw, Mic, Send } from "lucide-react";
 import { addDays, format, isSameDay, startOfDay } from "date-fns";
@@ -15,6 +16,7 @@ import { RouteCard } from "@/components/route-card";
 import { CityMarquee } from "@/components/city-marquee";
 import { useBookingTransition } from "@/components/booking-motion";
 import { ThemeToggle } from "@/components/global-polish";
+import { profileQuery } from "@/lib/auth";
 import { parseTrip } from "@/lib/trip";
 
 export const Route = createFileRoute("/")({
@@ -265,6 +267,7 @@ function StationField({ id, label, hint, error, placeholder, compactPlaceholder,
 }
 
 function Index() {
+  const { data: profile } = useQuery(profileQuery);
   const { begin } = useBookingTransition();
   const homeRef = useRef<HTMLDivElement>(null);
   useHomeEntrance(homeRef);
@@ -359,7 +362,7 @@ function Index() {
       <div className="hero-dark">
       <header className="site-header reveal" style={{ ["--d" as string]: "0ms" }}>
         <a href="/" className="wordmark" aria-label="Rail Daddy home"><span className="wordmark-type" aria-hidden="true">RAIL <span className="wordmark-daddy">D<span className="wordmark-wink">A</span>DDY</span><span className="wordmark-stop">.</span></span></a>
-        <nav aria-label="Main navigation"><Button variant="nav" className="active" onClick={() => document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "center" })}>Find a train</Button><Button variant="nav" onClick={() => setDialog("about")}>Why rail? <ArrowUpRight size={13} /></Button></nav>
+        <nav aria-label="Main navigation"><Button variant="nav" className="active" onClick={() => document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "center" })}>Find a train</Button><Button variant="nav" onClick={() => setDialog("about")}>Why rail? <ArrowUpRight size={13} /></Button><Button variant="nav" asChild><Link to={profile ? "/account" : "/login"}>{profile ? "Account" : "Sign in"}</Link></Button></nav>
         <div className="header-actions">
           <ThemeToggle theme={theme} onChange={setTheme} />
           <Button variant="travel" className="ai-cta" onClick={() => setDialog("ai")}>Ask Daddy AI <ArrowUpRight size={14} /><span className="ai-tip" role="tooltip">Ask: best train to Goa this weekend</span></Button>
@@ -370,6 +373,7 @@ function Index() {
               <Button variant="nav" role="menuitem" onClick={() => { setMenuOpen(false); document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}>Find a train</Button>
               <Button variant="nav" role="menuitem" onClick={() => { setMenuOpen(false); setDialog("about"); }}>Why rail? <ArrowUpRight size={13} /></Button>
               <Button variant="nav" role="menuitem" onClick={() => { setMenuOpen(false); setDialog("ai"); }}>Ask Daddy AI <ArrowUpRight size={13} /></Button>
+              <Button variant="nav" asChild><Link role="menuitem" to={profile ? "/account" : "/login"}>{profile ? "Account" : "Sign in"}</Link></Button>
               <div className="mobile-menu-theme" role="group" aria-label="Theme">
                 <span>Theme</span>
                 <ThemeToggle theme={theme} onChange={setTheme} />

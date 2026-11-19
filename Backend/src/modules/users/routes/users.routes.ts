@@ -1,16 +1,13 @@
-import type { FastifyInstance } from "fastify";
-import { UsersController } from "../controllers/users.controller.js";
+import { json, Router } from "express";
+import { requireAuth } from "../../../middleware/auth.js";
+import { getMe, putMe } from "../controllers/users.controller.js";
 
-export default async function usersRoutes(app: FastifyInstance) {
-  const controller = new UsersController();
+export function createUsersRouter(secret: string) {
+  const router = Router();
+  const authenticate = requireAuth(secret);
 
-  app.addHook("onRequest", app.authenticate);
+  router.get("/me", authenticate, getMe);
+  router.put("/me", authenticate, json({ limit: "1mb" }), putMe);
 
-  app.get("/me", async function getProfile(request, reply) {
-    return controller.getMe(request, reply);
-  });
-
-  app.put("/me", async function saveProfile(request, reply) {
-    return controller.putMe(request, reply);
-  });
+  return router;
 }

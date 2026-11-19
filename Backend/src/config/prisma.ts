@@ -7,5 +7,5 @@ const adapter = new PrismaPg({
   connectionTimeoutMillis: 5000,
 });
 
-// All repositories and the Fastify plugin share this client.
+// The server and repositories share one database client.
 export const prisma = new PrismaClient({ adapter: adapter });

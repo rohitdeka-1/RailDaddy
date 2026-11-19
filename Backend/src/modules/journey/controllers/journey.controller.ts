@@ -1,32 +1,19 @@
-import type { FastifyRequest, FastifyReply } from "fastify";
-import { JourneyService } from "../services/journey.service.js";
+import type { Request, Response } from "express";
+import { getTrainsBetweenStations } from "../../../integrations/railway/railRadar.js";
 import { journeySearchSchema } from "../journey.schemas.js";
 
-export class JourneyController {
-  private service: JourneyService;
-
-  constructor() {
-    this.service = new JourneyService();
+export async function searchDirectJourneys(req: Request, res: Response) {
+  const search = journeySearchSchema.safeParse(req.query);
+  if (!search.success) {
+    return res.status(400).json({ message: "Invalid search parameters", issues: search.error.issues });
   }
 
-  async searchDirectJourneys(request: FastifyRequest, reply: FastifyReply) {
-    const parsed = journeySearchSchema.safeParse(request.query);
-
-    if (!parsed.success) {
-      return reply.status(400).send({
-        message: "Invalid search parameters",
-        issues: parsed.error.issues
-      });
-    }
-
-    try {
-      const results = await this.service.findDirectJourneys(parsed.data);
-      return reply.status(200).send(results);
-    } catch (error) {
-      request.log.error(error);
-      return reply.status(500).send({ message: "Failed to search journeys" });
-    }
+  const { source, destination, date } = search.data;
+  try {
+    const journeys = await getTrainsBetweenStations(source, destination, date);
+    return res.json(journeys);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to search journeys" });
   }
-
 }
-

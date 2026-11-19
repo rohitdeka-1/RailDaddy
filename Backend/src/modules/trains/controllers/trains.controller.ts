@@ -1,21 +1,12 @@
-import type { FastifyRequest, FastifyReply } from "fastify";
-import { TrainsService } from "../services/trains.service.js";
+import type { Request, Response } from "express";
+import { getTrainDetails } from "../../../integrations/railway/railRadar.js";
 
-export class TrainsController {
-  private service: TrainsService;
-
-  constructor() {
-    this.service = new TrainsService();
-  }
-
-  async getTrainByNo(request: FastifyRequest<{ Params: { trainNo: string } }>, reply: FastifyReply) {
-    const { trainNo } = request.params;
-    try {
-        const data = await this.service.getTrainByNo(trainNo);
-        return reply.status(200).send(data);
-    } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Internal Server Error" });
-    }
+export async function getTrainByNo(req: Request<{ trainNo: string }>, res: Response) {
+  try {
+    const train = await getTrainDetails(req.params.trainNo);
+    return res.json(train);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }

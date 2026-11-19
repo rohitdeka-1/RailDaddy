@@ -1,65 +1,39 @@
 import { prisma } from "../../../config/prisma.js";
 import { Prisma } from "../../../generated/prisma/index.js";
-import type { User } from "../../../generated/prisma/index.js";
-
 import type { UpdateProfileInput } from "../users.schemas.js";
 
-export interface UserRepository {
-  findByCognitoSub(cognitoSub: string): Promise<User | null>;
-  save(cognitoSub: string, data: UpdateProfileInput): Promise<User>;
-}
+// Only these fields can leave the profile API.
+const profileFields = {
+  id: true,
+  email: true,
+  displayName: true,
+  preferences: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
-export class UsersRepository implements UserRepository {
+export const usersRepository = {
+  findById(id: string) {
+    return prisma.user.findUnique({ where: { id }, select: profileFields });
+  },
 
-  async findByCognitoSub(cognitoSub: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
-      where: { cognitoSub: cognitoSub },
-    });
-    return user;
-  }
-
-  async findOrCreate(cognitoSub: string): Promise<User> {
+  async save(id: string, input: UpdateProfileInput) {
+    const { displayName, email, preferences } = input;
     try {
-      return await prisma.user.upsert({
-        where: { cognitoSub: cognitoSub },
-        create: { cognitoSub: cognitoSub },
-        // Authentication must not change an existing profile.
-        update: {},
+      return await prisma.user.update({
+        where: { id },
+        data: {
+          displayName,
+          ...(email !== undefined && { email }),
+          ...(preferences !== undefined && { preferences: preferences ?? Prisma.DbNull }),
+        },
+        select: profileFields,
       });
     } catch (error) {
-      // Another first request may have created this user concurrently.
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        const user = await this.findByCognitoSub(cognitoSub);
-        if (user) {
-          return user;
-        }
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return null;
       }
       throw error;
     }
   }
-
-  async save(cognitoSub: string, data: UpdateProfileInput): Promise<User> {
-    const preferences = data.preferences !== undefined ? (data.preferences === null ? Prisma.DbNull : data.preferences) : undefined;
-
-    const user = await prisma.user.upsert({
-      where: { cognitoSub: cognitoSub },
-      create: {
-        cognitoSub: cognitoSub,
-        ...(data.displayName !== undefined && { displayName: data.displayName }),
-        ...(data.email !== undefined && { email: data.email }),
-        ...(data.preferences !== undefined && {
-          preferences: data.preferences === null ? Prisma.DbNull : data.preferences as Prisma.InputJsonValue
-        })
-      },
-      update: {
-        ...(data.displayName !== undefined && { displayName: data.displayName }),
-        ...(data.email !== undefined && { email: data.email }),
-        ...(data.preferences !== undefined && {
-          preferences: data.preferences === null ? Prisma.DbNull : data.preferences as Prisma.InputJsonValue
-        })
-      },
-    });
-    return user;
-  }
-
-}
+};

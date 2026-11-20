@@ -17,6 +17,10 @@ npm run dev
 
 In a second terminal, go to `Frontend`, run `npm ci` and `npm run dev`, then open the
 URL Vite prints. Start at `/signup` to create an account or `/login` to sign in.
+Set `RAIL_API` in `Backend/.env` to enable RailRadar station suggestions, train schedules, and connecting journeys.
+The connection planner uses timetables. Live fares, budget filtering, and seat checks require separate RailRadar access.
+To enable custom Ask Daddy AI questions, set `GOOGLE_API_KEY` and `GEMINI_CHAT_MODEL` in `Backend/.env` and restart the backend.
+Quick answers work without Gemini.
 Vite forwards `/api` to the backend. Set `API_PROXY_TARGET` when using a different port.
 In production, run `npm run build` and `npm start` from `Backend`. Serve the frontend and proxy
 `/api` to Express on the same HTTPS origin.

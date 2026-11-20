@@ -13,11 +13,11 @@ const topics: Record<string, Topic> = {
   about: {
     title: "About Rail Daddy",
     kicker: "Who we are",
-    intro: "Rail Daddy is a booking assistant for Indian train travel. We help you pick a route, compare classes and reach a shortlist of trains worth booking — without the maze.",
+    intro: "Rail Daddy helps you find trains across India and compare schedules for your trip.",
     points: [
-      { heading: "What Rail Daddy does", body: "Searches trains between two stations, and shows timings and fares by class so you can compare your options." },
+      { heading: "What Rail Daddy does", body: "Searches direct trains between two stations on your travel date and shows departure times, arrival times and journey durations." },
       { heading: "What Rail Daddy is not", body: "We are not Indian Railways. Tickets are issued, confirmed and cancelled through authorized Indian Railways channels." },
-      { heading: "Where this build stands", body: "This is a design preview. The stations, timings and fares you see on the search page are sample values, not live inventory." },
+      { heading: "Seat availability and fares", body: "Check the authorized booking channel for fares, seat availability and tickets." },
     ],
     closing: "Ready to look at trains? Head back to the search.",
   },
@@ -26,9 +26,8 @@ const topics: Record<string, Topic> = {
     kicker: "Before you search",
     intro: "Quick answers to the things people ask us most often.",
     points: [
-      { heading: "How a search works", body: "Type a city, station name or station code in From and To, pick a travel date, choose a class and passenger count, then press Find my train." },
-      { heading: "What the classes mean", body: "SL is sleeper, an unreserved-bunk coach. 3A is three berths a side with blankets. 2A is two berths a side and roomier. 1A is the most private and costly." },
-      { heading: "Dates", body: "Travel dates start from tomorrow. Today, Tomorrow and This weekend are one tap in the calendar." },
+      { heading: "How a search works", body: "Choose a station from the From and To suggestions or enter its code, pick a travel date, then press Find my train." },
+      { heading: "Dates", body: "Pick the date you want to depart from your boarding station. Times are shown in IST." },
     ],
     closing: "Still stuck? The Contact page is the quickest way to reach us.",
   },

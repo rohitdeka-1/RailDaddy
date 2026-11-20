@@ -11,7 +11,7 @@ const steps = ["Search", "Choose train", "Passengers", "Pay"];
 
 /** Light-theme frame for post-search screens: header, trip summary, 4-step progress, sticky mobile bar. */
 export function BookingShell({ step, trip, back, children, bar }: {
-  step: 1 | 2 | 3;
+  step?: 1 | 2 | 3;
   trip: Trip;
   back?: ReactNode | undefined;
   children: ReactNode;
@@ -22,9 +22,9 @@ export function BookingShell({ step, trip, back, children, bar }: {
     <div className="flow-app">
       <header className="flow-header" data-motion-owned="true">
         <Link to="/" className="flow-wordmark" aria-label="Rail Daddy home">RAIL <span>DADDY</span>.</Link>
-        <BookingSummary><p className="flow-trip"><strong>{trip.from}</strong><ArrowRight size={14} aria-hidden="true" /><strong>{trip.to}</strong><span>· {tripDateLabel(trip.date)}{step > 1 && ` · ${trip.cls} · ${trip.pax} pax`}</span></p></BookingSummary>
+        <BookingSummary><p className="flow-trip"><strong>{trip.from}</strong><ArrowRight size={14} aria-hidden="true" /><strong>{trip.to}</strong><span>· {tripDateLabel(trip.date)}{step !== undefined && step > 1 && ` · ${trip.cls} · ${trip.pax} pax`}</span></p></BookingSummary>
       </header>
-      <nav aria-label="Booking progress" className="flow-steps" data-motion-owned="true">
+      {step !== undefined && <nav aria-label="Booking progress" className="flow-steps" data-motion-owned="true">
         <ol>
           {steps.map((label, i) => {
             const state = i < step ? "done" : i === step ? "current" : "todo";
@@ -37,7 +37,7 @@ export function BookingShell({ step, trip, back, children, bar }: {
             );
           })}
         </ol>
-      </nav>
+      </nav>}
       <motion.main className="flow-main" initial={{ opacity: reduced ? 1 : 0 }} animate={{ opacity: 1 }} transition={{ duration: reduced ? 0 : motionTokens.duration.standard }}>
         {back && <div className="flow-back"><ChevronLeft size={16} aria-hidden="true" />{back}</div>}
         {children}

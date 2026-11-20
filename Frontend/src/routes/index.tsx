@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { ArrowDownUp, ArrowUpRight, CalendarDays, MapPin, Menu, MessageCircle, Sparkles, TrainFront, AlertCircle, X, History, ChevronDown, ShieldCheck, RotateCcw, Mic, Send } from "lucide-react";
-import { addDays, format, isSameDay, startOfDay } from "date-fns";
+import { ArrowDownUp, ArrowUpRight, CalendarDays, MapPin, Menu, Sparkles, TrainFront, AlertCircle, X, History, ChevronDown, ShieldCheck, RotateCcw, Send } from "lucide-react";
+import { addDays, format, isSameDay, isValid, parseISO, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DatePanel } from "@/components/date-panel";
+import { JourneyAssistant } from "@/components/journey-assistant";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import heroJpg from "@/assets/midnight-lake.jpg";
 import { useHomeEntrance } from "@/hooks/use-home-entrance";
@@ -18,15 +19,21 @@ import { useBookingTransition } from "@/components/booking-motion";
 import { ThemeToggle } from "@/components/global-polish";
 import { profileQuery } from "@/lib/auth";
 import { parseTrip } from "@/lib/trip";
+import { findStation, popularStationNames, stationCodeFor, stationLabel, stationSearchQuery, stationSuggestions, type Station } from "@/lib/railway";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { from?: string; to?: string; date?: string } => ({
+    ...(typeof search["from"] === "string" && { from: search["from"].slice(0, 100) }),
+    ...(typeof search["to"] === "string" && { to: search["to"].slice(0, 100) }),
+    ...(typeof search["date"] === "string" && { date: search["date"] }),
+  }),
   head: () => ({ links: [
     { rel: "preload", as: "image", href: heroJpg, type: "image/jpeg", fetchPriority: "high" },
   ], meta: [
     { title: "Rail Daddy — Find train routes & book tickets across India" },
-    { name: "description", content: "Rail Daddy shows you available train routes and tickets: start by choosing your route and travel date." },
+    { name: "description", content: "Find scheduled trains across India by departure station, arrival station, and travel date." },
     { property: "og:title", content: "Rail Daddy — Find train routes & book tickets across India" },
-    { property: "og:description", content: "Available train routes and tickets in one place. Search by route and travel date." },
+    { property: "og:description", content: "Search Indian train schedules by route and travel date." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
     { property: "og:image", content: heroJpg },
@@ -36,11 +43,11 @@ export const Route = createFileRoute("/")({
 });
 
 const popularRoutes = [
-  { from: "New Delhi", to: "Jaipur", fromLabel: "Delhi", toLabel: "Jaipur", note: "~4h 25m · from ₹350" },
-  { from: "Mumbai Central", to: "Goa", fromLabel: "Mumbai", toLabel: "Goa", note: "~8h 30m · from ₹485" },
-  { from: "New Delhi", to: "Varanasi", fromLabel: "Delhi", toLabel: "Varanasi", note: "~8h · from ₹420" },
-  { from: "Bengaluru", to: "Chennai Central", fromLabel: "Bengaluru", toLabel: "Chennai", note: "~4h 25m · from ₹190" },
-  { from: "New Delhi", to: "Shimla", fromLabel: "Delhi", toLabel: "Shimla", note: "~5h 30m · from ₹290" },
+  { from: "New Delhi", to: "Jaipur", fromLabel: "Delhi", toLabel: "Jaipur" },
+  { from: "Mumbai Central", to: "Goa", fromLabel: "Mumbai", toLabel: "Goa" },
+  { from: "New Delhi", to: "Varanasi", fromLabel: "Delhi", toLabel: "Varanasi" },
+  { from: "Bengaluru", to: "Chennai Central", fromLabel: "Bengaluru", toLabel: "Chennai" },
+  { from: "New Delhi", to: "Shimla", fromLabel: "Delhi", toLabel: "Shimla" },
 ];
 const marqueeCities = [
   ["DELHI", "New Delhi"],
@@ -54,67 +61,7 @@ const marqueeCities = [
   ["UDAIPUR", "Udaipur"],
 ] as const;
 
-type Station = { name: string; code: string; city: string };
-
-const stations: Station[] = [
-  { name: "New Delhi", code: "NDLS", city: "Delhi" },
-  { name: "Mumbai Central", code: "BCT", city: "Mumbai" },
-  { name: "Indore Junction", code: "INDB", city: "Indore" },
-  { name: "Bengaluru", code: "SBC", city: "Bengaluru" },
-  { name: "Chennai Central", code: "MAS", city: "Chennai" },
-  { name: "Kolkata", code: "HWH", city: "Howrah" },
-  { name: "Jaipur", code: "JP", city: "Jaipur" },
-  { name: "Hyderabad", code: "HYB", city: "Hyderabad" },
-  { name: "Pune", code: "PUNE", city: "Pune" },
-  { name: "Ahmedabad", code: "ADI", city: "Ahmedabad" },
-  { name: "Goa", code: "MAO", city: "Madgaon" },
-  { name: "Varanasi", code: "BSB", city: "Varanasi" },
-  { name: "Shimla", code: "SML", city: "Shimla" },
-  { name: "Lucknow", code: "LKO", city: "Lucknow" },
-  { name: "Bhopal", code: "BPL", city: "Bhopal" },
-  { name: "Chandigarh", code: "CDG", city: "Chandigarh" },
-  { name: "Patna", code: "PNBE", city: "Patna" },
-  { name: "Kochi", code: "ERS", city: "Ernakulam" },
-  { name: "Udaipur", code: "UDZ", city: "Udaipur" },
-  { name: "Darjeeling", code: "NJP", city: "New Jalpaiguri" },
-  { name: "Amritsar", code: "ASR", city: "Amritsar" },
-  { name: "Agra Cantt", code: "AGC", city: "Agra" },
-];
-const popularStationNames = ["New Delhi", "Mumbai Central", "Bengaluru", "Indore Junction", "Goa"];
-const findStation = (name: string) => stations.find((s) => s.name === name);
 const shortName = (name: string) => findStation(name)?.city ?? name;
-
-function editDistance(a: string, b: string) {
-  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= a.length; i++) {
-    let prev = (row[0] ?? 0); row[0] = i;
-    for (let j = 1; j <= b.length; j++) {
-      const tmp = (row[j] ?? 0);
-      row[j] = Math.min((row[j] ?? 0) + 1, (row[j - 1] ?? 0) + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
-      prev = tmp;
-    }
-  }
-  return (row[b.length] ?? 0);
-}
-
-/** Ranks stations by code, name, city, then typo-tolerant similarity. */
-function searchStations(query: string): Station[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const scored = stations.map((s) => {
-    const name = s.name.toLowerCase(), city = s.city.toLowerCase(), code = s.code.toLowerCase();
-    let score = 99;
-    if (code === q) score = 0;
-    else if (name.startsWith(q) || city.startsWith(q) || code.startsWith(q)) score = 1;
-    else if (name.includes(q) || city.includes(q)) score = 2;
-    else if (q.length >= 3) {
-      const d = Math.min(editDistance(q, name.slice(0, q.length)), editDistance(q, city.slice(0, q.length)), editDistance(q, name), editDistance(q, city));
-      if (d <= (q.length >= 6 ? 2 : 1)) score = 3 + d;
-    }
-    return { s, score };
-  });
-  return scored.filter((x) => x.score < 99).sort((a, b) => a.score - b.score).slice(0, 6).map((x) => x.s);
-}
 
 /** True on phone widths, where the search card switches to its compact row layout. */
 function useCompactSearchCard() {
@@ -167,19 +114,34 @@ function StationField({ id, label, hint, error, placeholder, compactPlaceholder,
   const reduced = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(-1);
   const query = value.trim();
+  const keyword = open && !/ \([A-Z0-9]{1,10}\)$/.test(query) ? query : "";
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedKeyword(keyword), 300);
+    return () => window.clearTimeout(timeout);
+  }, [keyword]);
+  const lookupEnabled = keyword.length >= 2 && keyword === debouncedKeyword;
+  const lookup = useQuery({ ...stationSearchQuery(debouncedKeyword.toLowerCase()), enabled: lookupEnabled });
   const groups: { title: string; items: Station[] }[] = [];
-  if (query && !findStation(value)) {
-    const found = searchStations(query);
-    groups.push({ title: found.length ? "Matching stations" : "", items: found });
+  if (keyword) {
+    const found = stationSuggestions(keyword, lookupEnabled ? lookup.data : undefined);
+    if (found.length) groups.push({ title: "Matching stations", items: found });
   } else {
-    const recentItems = recent.map(findStation).filter((s): s is Station => !!s).slice(0, 3);
+    const recentItems = recent.flatMap((text) => {
+      const code = stationCodeFor(text);
+      return code ? [findStation(text) ?? { code, name: text.replace(/ \([A-Z0-9]{1,10}\)$/, ""), city: null }] : [];
+    }).slice(0, 3);
     if (recentItems.length) groups.push({ title: "Recent", items: recentItems });
     groups.push({ title: "Popular", items: popularStationNames.filter((n) => !recent.includes(n)).map(findStation).filter((s): s is Station => !!s) });
   }
   const flat = groups.flatMap((g) => g.items);
+  const highlightedIndex = activeIndex < flat.length ? activeIndex : -1;
+  const lookupStatus = keyword.length < 2 || flat.length > 0 ? "" :
+    !lookupEnabled || lookup.isPending ? "Searching stations…" :
+      lookup.isError ? "Station suggestions unavailable. You can enter a station code." : "No matching stations.";
 
   function choose(station: Station) {
-    onChange(station.name);
+    onChange(stationLabel(station));
     if (window.matchMedia("(max-width: 760px)").matches) fieldRef.current?.querySelector("input")?.blur();
     setOpen(false);
     setActiveIndex(-1);
@@ -193,9 +155,9 @@ function StationField({ id, label, hint, error, placeholder, compactPlaceholder,
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setActiveIndex((current) => Math.max(current - 1, 0));
-    } else if (event.key === "Enter" && open && flat.length > 0) {
+    } else if (event.key === "Enter" && open && flat.length > 0 && (highlightedIndex >= 0 || !stationCodeFor(value))) {
       event.preventDefault();
-      const station = flat[Math.max(activeIndex, 0)];
+      const station = flat[Math.max(highlightedIndex, 0)];
       if (station) choose(station);
     } else if (event.key === "Escape") {
       setOpen(false);
@@ -223,13 +185,14 @@ function StationField({ id, label, hint, error, placeholder, compactPlaceholder,
         role="combobox"
         aria-expanded={open && flat.length > 0}
         aria-controls={`${id}-suggestions`}
-        aria-activedescendant={activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
+        aria-activedescendant={open && highlightedIndex >= 0 ? `${id}-option-${highlightedIndex}` : undefined}
         aria-invalid={!!error}
         aria-describedby={`${id}-hint`}
       />
       <span id={`${id}-hint`} className={error ? "field-hint search-field-error" : "field-hint"}>
-        {error ? <><AlertCircle size={14} aria-hidden="true" />{error}</> : (findStation(value) ? `${findStation(value)?.code} · ${findStation(value)?.city}` : hint)}
+        {error ? <><AlertCircle size={14} aria-hidden="true" />{error}</> : stationCodeFor(value) ?? hint}
       </span>
+      {open && lookupStatus && <div className="station-suggestions suggestion-group" role="status">{lookupStatus}</div>}
       <AnimatePresence>
       {open && flat.length > 0 && (
         <motion.div key="suggestions" data-motion-owned="true" initial={{ scaleY: reduced ? 1 : 0.85, opacity: reduced ? 1 : 0 }} animate={{ scaleY: 1, opacity: 1 }} exit={{ scaleY: reduced ? 1 : 0.95, opacity: 0 }} transition={{ duration: reduced ? 0 : motionTokens.duration.micro, ease: motionTokens.easing.entrance }} id={`${id}-suggestions`} className="station-suggestions" role="listbox"><LayoutGroup id={`${id}-suggestions`}>
@@ -267,6 +230,7 @@ function StationField({ id, label, hint, error, placeholder, compactPlaceholder,
 }
 
 function Index() {
+  const editSearch = Route.useSearch();
   const { data: profile } = useQuery(profileQuery);
   const { begin } = useBookingTransition();
   const homeRef = useRef<HTMLDivElement>(null);
@@ -287,12 +251,15 @@ function Index() {
     const image = heroRef.current;
     if (image?.complete && image.naturalWidth > 0) setHeroLoaded(true);
   }, []);
-  const [source, setSource] = useState("");
-  const [destination, setDestination] = useState("");
+  const [source, setSource] = useState(editSearch.from ?? "");
+  const [destination, setDestination] = useState(editSearch.to ?? "");
   const compactCard = useCompactSearchCard();
   const today = startOfDay(new Date());
   const tomorrow = startOfDay(addDays(new Date(), 1));
-  const [date, setDate] = useState<Date | undefined>(tomorrow);
+  const [date, setDate] = useState<Date | undefined>(() => {
+    const saved = parseISO(editSearch.date ?? "");
+    return isValid(saved) && saved >= today ? saved : tomorrow;
+  });
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [cardMode, setCardMode] = useState<"search" | "ai">("search");
   const [askText, setAskText] = useState("");
@@ -325,11 +292,11 @@ function Index() {
     } catch { /* ignore corrupt storage */ }
   }, []);
   const navigate = useNavigate();
-  const from = source.trim();
-  const to = destination.trim();
+  const from = stationCodeFor(source);
+  const to = stationCodeFor(destination);
   const problems = {
-    source: from ? "" : "Enter a departure station.",
-    destination: !to ? "Enter an arrival station." : from.toLowerCase() === to.toLowerCase() ? "Choose a different arrival station." : "",
+    source: from ? "" : "Choose a departure station or enter its code.",
+    destination: !to ? "Choose an arrival station or enter its code." : from === to ? "Choose a different arrival station." : "",
     date: date ? "" : "Choose a travel date.",
   };
   const fieldErrors = validationAttempt > 0 ? problems : null;
@@ -337,7 +304,7 @@ function Index() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (submittingRef.current) return;
-    if (problems.source || problems.destination || !date) {
+    if (!from || !to || problems.destination || !date) {
       setValidationAttempt(attempt => attempt + 1);
       return;
     }
@@ -345,16 +312,21 @@ function Index() {
     setSubmitting(true);
     const nextRecent = [destination.trim(), source.trim(), ...recent.filter((r) => r !== source.trim() && r !== destination.trim())].slice(0, 5);
     setRecent(nextRecent);
-    const search = { from, to, date: date.toISOString() };
+    const search = { from: source.trim(), to: destination.trim(), date: format(date, "yyyy-MM-dd") };
     try { window.localStorage.setItem("rd-recent-stations", JSON.stringify(nextRecent)); window.localStorage.setItem("rd-last-search", JSON.stringify(search)); } catch { /* storage unavailable */ }
-    const tripSearch = parseTrip({ from: search.from, to: search.to, date: format(date, "yyyy-MM-dd") });
+    const tripSearch = parseTrip({ from, to, date: search.date });
     await leaveSearch();
     const consoleElement = homeRef.current?.querySelector<HTMLElement>('.booking-console');
     if (consoleElement) {
       begin(consoleElement, tripSearch);
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     }
-    await navigate({ to: "/trains", search: tripSearch });
+    try {
+      await navigate({ to: "/trains", search: tripSearch });
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -406,11 +378,11 @@ function Index() {
           <div className="hero-content">
             <div className="hero-eyebrow reveal" style={{ ["--d" as string]: "100ms" }}><span className="status-dot" /> YOUR ROUTE. YOUR SEAT.</div>
             <h1 aria-label="REACH YOUR DESTINATION."><span className="line" aria-hidden="true"><span className="headline-mask"><span className="headline-word">REACH</span></span>{" "}<span className="headline-mask"><span className="headline-word">YOUR</span></span>{" "}<br className="h1-break" /><span className="headline-mask destination-mask"><span className="headline-word h1-accent">DESTINATION.</span><span className="destination-underline" /></span></span><span className="headline-star" aria-hidden="true">✳</span></h1>
-            <p className="hero-subhead reveal" style={{ ["--d" as string]: "400ms" }}>Compare trains, check seat availability, and book in under a minute.</p>
+            <p className="hero-subhead reveal" style={{ ["--d" as string]: "400ms" }}>Compare direct trains and find connections when you need to change along the way.</p>
           </div>
 
           <div className="booking-area" id="booking">
-            <div className="booking-intro reveal" style={{ ["--d" as string]: "550ms" }}><span><span className="mini-track" /> Start with the route. We'll find the trains.</span>{lastSearch ? <button type="button" className="last-search" aria-label={`Repeat last search: ${shortName(lastSearch.from)} to ${shortName(lastSearch.to)}`} onClick={() => { setSource(lastSearch.from); setDestination(lastSearch.to); const d = new Date(lastSearch.date); if (!Number.isNaN(d.getTime()) && d >= startOfDay(new Date())) setDate(startOfDay(d)); }}><History size={14} aria-hidden="true" /><span className="last-search-label">Last search</span> {shortName(lastSearch.from)} to {shortName(lastSearch.to)}{lastSearch.date && !Number.isNaN(new Date(lastSearch.date).getTime()) ? `, ${format(new Date(lastSearch.date), "EEE")}` : ""}</button> : <span className="booking-step">01 <span>/ ROUTE BASICS</span></span>}</div>
+            <div className="booking-intro reveal" style={{ ["--d" as string]: "550ms" }}><span><span className="mini-track" /> Start with the route. We'll find the trains.</span>{lastSearch ? <button type="button" className="last-search" aria-label={`Repeat last search: ${shortName(lastSearch.from)} to ${shortName(lastSearch.to)}`} onClick={() => { setSource(lastSearch.from); setDestination(lastSearch.to); const d = parseISO(lastSearch.date); if (!Number.isNaN(d.getTime()) && d >= startOfDay(new Date())) setDate(startOfDay(d)); }}><History size={14} aria-hidden="true" /><span className="last-search-label">Last search</span> {shortName(lastSearch.from)} to {shortName(lastSearch.to)}{lastSearch.date && !Number.isNaN(parseISO(lastSearch.date).getTime()) ? `, ${format(parseISO(lastSearch.date), "EEE")}` : ""}</button> : <span className="booking-step">01 <span>/ ROUTE BASICS</span></span>}</div>
             <form onSubmit={submit} data-mode={cardMode} className={`booking-console${submitting ? " search-submitting" : ""}`} aria-busy={submitting}>
               <span className="booking-landing-surface" aria-hidden="true" />
               <span className="booking-landing-shadow" aria-hidden="true" />
@@ -425,14 +397,13 @@ function Index() {
               {cardMode === "ai" && (
                 <div className="ask-pane" role="tabpanel" aria-label="Ask Daddy">
                   <div className="ask-box">
-                    <textarea aria-label="Ask Daddy" value={askText} onChange={(e) => setAskText(e.target.value)} placeholder="Where do you want to go? Try: 'Beach trip from Mumbai this weekend under Rs 1500'" rows={4} />
+                    <textarea aria-label="Ask Daddy" value={askText} onChange={(e) => setAskText(e.target.value)} maxLength={600} placeholder="Ask about train connections or how to plan your trip" rows={4} />
                     <div className="ask-actions">
-                      <button type="button" className="ask-mic" aria-label="Speak your trip"><Mic size={18} aria-hidden="true" /></button>
-                      <button type="button" className="ask-send" aria-label="Send to Daddy" onClick={() => setDialog("ai")}><Send size={17} aria-hidden="true" /></button>
+                      <button type="button" className="ask-send" aria-label="Open Ask Daddy AI" onClick={() => setDialog("ai")}><Send size={17} aria-hidden="true" /></button>
                     </div>
                   </div>
                   <div className="ask-chips">
-                    {["Weekend getaway", "Cheapest to Goa", "Overnight to Delhi"].map((c) => (
+                    {["How do I find a connection?", "Can I check seats and fares?", "Do I need separate tickets?"].map((c) => (
                       <button key={c} type="button" onClick={() => setAskText(c)}>{c}</button>
                     ))}
                   </div>
@@ -478,7 +449,7 @@ function Index() {
             <div className="routes-head"><span className="routes-label">Popular routes</span><span className="routes-sub">Tap one — it fills the form</span></div>
             <div className="routes-row">
               {popularRoutes.map((route, index) => (
-                <RouteCard key={route.from + route.to} route={route} index={index} onChoose={() => { setSource(route.from); setDestination(route.to); }} />
+                <RouteCard key={route.from + route.to} route={{ ...route, note: `${stationCodeFor(route.from)} → ${stationCodeFor(route.to)}` }} index={index} onChoose={() => { setSource(route.from); setDestination(route.to); }} />
               ))}
             </div>
           </div>
@@ -502,12 +473,14 @@ function Index() {
         </div>
       </footer>
       </section>
-      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
+      <JourneyAssistant open={dialog === "ai"} onOpenChange={(open) => setDialog(open ? "ai" : null)}
+        initialQuestion={askText} trip={from && to && from !== to && date ? { source: from, destination: to, date: format(date, "yyyy-MM-dd") } : undefined} />
+      <Dialog open={dialog === "about"} onOpenChange={(open) => { if (!open) setDialog(null); }}>
         <DialogContent className="railway-dialog">
           <DialogHeader>
-            <div className="dialog-icon">{dialog === "ai" ? <MessageCircle /> : <TrainFront />}</div>
-            <DialogTitle>{dialog === "ai" ? "Hey, Daddy AI here." : "Why travel by rail?"}</DialogTitle>
-            <DialogDescription>{dialog === "ai" ? "No plan? No problem. Tell me your route, budget and dates and I’ll find the best train options for you. Live AI chat isn’t connected in this design preview." : "Rail travel means no airport stress, more scenery and a journey that’s part of the holiday. Rail Daddy finds the right train for you."}</DialogDescription>
+            <div className="dialog-icon"><TrainFront /></div>
+            <DialogTitle>Why travel by rail?</DialogTitle>
+            <DialogDescription>Rail travel means no airport stress, more scenery and a journey that’s part of the holiday. Rail Daddy finds the right train for you.</DialogDescription>
           </DialogHeader>
           <Button variant="travel" onClick={() => setDialog(null)}>Got it<X size={16} /></Button>
         </DialogContent>

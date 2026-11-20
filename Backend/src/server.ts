@@ -9,11 +9,11 @@ async function start() {
     throw new Error("DATABASE_URL is required to connect to PostgreSQL");
   }
 
-  const app = buildApp();
-  await prisma.$connect();
+  // The PostgreSQL pool opens a connection when it executes its first query.
+  await prisma.$queryRaw`SELECT 1`;
   console.info("Postgres connected");
 
-  const server = createServer(app);
+  const server = createServer(buildApp());
   server.listen(envConfig.PORT, "localhost");
   await once(server, "listening");
   console.info(`Running http://localhost:${envConfig.PORT}`);

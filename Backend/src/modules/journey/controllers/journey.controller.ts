@@ -96,7 +96,7 @@ export async function askJourneyQuestion(req: Request, res: Response) {
       headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
       signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: "You are Rail Daddy's Indian train travel assistant. Give short practical answers. The optional trip is context only. You cannot look up schedules, fares, seat inventory, or bookings. Never invent them. Direct users to the connection planner for real schedules and to the official booking channel for fares and seats. Explain that transfers may require separate tickets. Answer rail travel questions only." }] },
+        systemInstruction: { parts: [{ text: "You are Rail Daddy's Indian train travel assistant. Give short practical answers. The optional trip is context only. You cannot look up schedules, fares, seat inventory, or bookings. Never invent them. Direct users to the connection planner for real schedules and to Refresh on a class tile for RailCore's seat report and quoted fare. Direct users to the authorized booking channel to buy tickets. Explain that transfers may require separate tickets. Answer rail travel questions only." }] },
         contents,
         generationConfig: { maxOutputTokens: 512 },
       }),

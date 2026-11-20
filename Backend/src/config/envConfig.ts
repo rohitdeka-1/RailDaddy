@@ -8,4 +8,5 @@ export const envConfig = {
     JWT_SECRET: process.env.JWT_SECRET,
     GEMINI_API_KEY: process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY,
     GEMINI_CHAT_MODEL: process.env.GEMINI_CHAT_MODEL,
+    RAIL_CORE_API: process.env.RAILCORE_API
 }

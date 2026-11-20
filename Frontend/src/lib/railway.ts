@@ -100,8 +100,10 @@ type TimetableStop = {
   departureDay?: number | null;
 };
 
+export type TrainTimetable = { route: TimetableStop[]; offeredClasses: string[] | undefined };
+
 export type ScheduledTrain = {
-  train: { number: string; name: string; type: string };
+  train: { number: string; name: string; type: string; classes?: string[] | undefined };
   from: StationStop & { departure: string | null };
   to: StationStop & { arrival: string | null };
   duration: number;
@@ -144,10 +146,10 @@ export function trainSearchQuery(source: string, destination: string, date: stri
 export function trainTimetableQuery(number: string) {
   return queryOptions({
     queryKey: ["train-timetable", number],
-    async queryFn({ signal }) {
-      const { route } = await fetchRailway<{ route: TimetableStop[] }>(`trains/${encodeURIComponent(number)}`, signal);
+    async queryFn({ signal }): Promise<TrainTimetable> {
+      const { route, train } = await fetchRailway<{ route: TimetableStop[]; train?: { classes?: string[] } }>(`trains/${encodeURIComponent(number)}`, signal);
       if (!Array.isArray(route)) throw new Error("The train timetable is temporarily unavailable.");
-      return route;
+      return { route, offeredClasses: Array.isArray(train?.classes) ? train.classes : undefined };
     },
     staleTime: 15 * 60 * 1000,
     retry: false,
@@ -165,7 +167,7 @@ export type JourneyFilters = {
 type DatedStation = Pick<Station, "code" | "name"> & { date: string };
 export type ConnectionPlan = {
   legs: {
-    train: { number: string; name: string };
+    train: { number: string; name: string; classes?: string[] | undefined };
     from: DatedStation & { departure: string };
     to: DatedStation & { arrival: string };
   }[];

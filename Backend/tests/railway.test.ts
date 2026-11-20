@@ -3,6 +3,7 @@ import { test } from "node:test";
 import express from "express";
 import request from "supertest";
 import journeyRouter from "../src/modules/journey/routes/journey.routes.js";
+import trainsRouter from "../src/modules/trains/routes/trains.routes.js";
 import { envConfig } from "../src/config/envConfig.js";
 
 test("journey routes use RailRadar's station and dated timetable endpoints", async (context) => {
@@ -106,4 +107,39 @@ test("custom journey questions use Gemini only when the backend is configured", 
   });
   await client.post("/journey/ask").send(input).expect(200, { answer: "Leave time to change stations." });
   assert.equal(generate.mock.callCount(), 1);
+});
+
+test("seat enquiries use RailCore and return the observation for the requested segment and class", async (context) => {
+  const app = express();
+  app.use("/trains", trainsRouter);
+  const originalKey = envConfig.RAIL_CORE_API;
+  envConfig.RAIL_CORE_API = "test-only-railcore-key";
+  context.after(() => { envConfig.RAIL_CORE_API = originalKey; });
+
+  const query = { from: "NDLS", to: "JP", date: "2028-02-29", class: "CC", quota: "GN" };
+  const observedAt = "2028-02-23T13:01:51+05:30";
+  const upstream = context.mock.method(globalThis, "fetch", async (input: string, options: RequestInit) => {
+    const url = new URL(input);
+    assert.equal(url.origin + url.pathname, "https://ir.railcore.tech/v1/availability/seats");
+    assert.equal(new Headers(options.headers).get("X-RailCore-Key"), "test-only-railcore-key");
+    assert.deepEqual(Object.fromEntries(url.searchParams), { train_number: "12015", ...query, quota: url.searchParams.get("quota") });
+    if (url.searchParams.get("quota") === "TQ") {
+      return Response.json({ error: { message: "Tatkal booking has not opened." } }, { status: 422 });
+    }
+
+    return Response.json({ success: true, data: {
+      train_number: "12015", from_station_code: "NDLS", to_station_code: "JP", journey_date: query.date, quota: "GN",
+      classes: [{ class_code: "CC", status: "AVAILABLE", availability_text: "AVAILABLE-9", available_count: 9, total_fare: 900, last_updated_at: observedAt }],
+    } });
+  });
+
+  const client = request(app);
+  await client.get("/trains/12015/availability").query({ ...query, from: "ndls" })
+    .expect("Cache-Control", "no-store").expect(200, {
+      data: { status: "AVAILABLE", description: "AVAILABLE-9", availableCount: 9, totalFare: 900, observedAt },
+    });
+  await client.get("/trains/12015/availability").query({ ...query, quota: "TQ" })
+    .expect(422, { message: "Tatkal booking has not opened." });
+  await client.get("/trains/12015/availability").query({ ...query, quota: "PT" }).expect(400);
+  assert.equal(upstream.mock.callCount(), 2);
 });

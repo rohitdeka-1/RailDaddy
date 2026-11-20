@@ -31,10 +31,18 @@ it("searches the selected stations and date and shows the provider's timetable",
   const ujjain = { code: "UJN", name: "Ujjain Jn", city: "Ujjain" };
   const indore = { code: "INDB", name: "Indore Junction", city: "Indore" };
   const timetablePath = "/api/v1/trains/19304";
+  let chairCarChecks = 0;
   const fetchRailway = vi.fn(async (path: string) => {
     const url = new URL(path, "http://localhost");
     if (url.pathname === "/api/v1/users/me") return new Response(null, { status: 401 });
     if (url.pathname === "/api/v1/journey/stations") return Response.json({ success: true, data: [ujjain] });
+    if (url.pathname.endsWith("/availability")) {
+      const travelClass = url.searchParams.get("class");
+      const quota = url.searchParams.get("quota");
+      const status = travelClass === "3A" && quota === "GN" ? "RAC" : travelClass === "SL" ? "WAITLIST" : "AVAILABLE";
+      const availableCount = travelClass === "CC" ? 10 - ++chairCarChecks : 9;
+      return Response.json({ data: { status, description: null, availableCount, totalFare: 900, observedAt: "2026-11-20T13:01:51+05:30" } });
+    }
     if (url.pathname === "/api/v1/journey/ask") return Response.json({ answer: "Check the booking channel for every leg." });
     if (url.pathname === "/api/v1/journey/plan") {
       const date = "2026-11-20";
@@ -42,13 +50,13 @@ it("searches the selected stations and date and shows the provider's timetable",
       return Response.json({ success: true, data: { itineraries: [{
         legs: [
           { train: { number: "19304", name: "Bhopal - Indore Express" }, from: { ...ujjain, date, departure: "13:00" }, to: { ...dewas, arrival: "14:00" } },
-          { train: { number: "22984", name: "Indore Express" }, from: { ...dewas, departure: "15:00" }, to: { ...indore, date, arrival: "16:00" } },
+          { train: { number: "22984", name: "Indore Express", classes: ["3A", "SL"] }, from: { ...dewas, date: "2026-11-21", departure: "01:00" }, to: { ...indore, date: "2026-11-21", arrival: "02:00" } },
         ],
         transfers: [{ waitMinutes: 60 }],
         totalDurationMinutes: 180,
       }] } });
     }
-    if (url.pathname === timetablePath) return Response.json({ success: true, data: { route: [
+    if (url.pathname === timetablePath) return Response.json({ success: true, data: { train: { classes: ["SL", "3A", "CC"] }, route: [
       { sequence: 1, station: { code: "BPL", name: "Bhopal Junction" }, departure: "19:00", departureDay: 2 },
       { sequence: 25, station: ujjain, departure: "23:05", departureDay: 2 },
       { sequence: 32, station: { code: "DWX", name: "Dewas Junction" }, arrival: "23:58", arrivalDay: 2, departure: "00:03", departureDay: 3 },
@@ -80,6 +88,10 @@ it("searches the selected stations and date and shows the provider's timetable",
   fireEvent.click(await screen.findByRole("option", { name: /Ujjain Jn/ }));
   fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "INDB" } });
   fireEvent.click(screen.getByRole("button", { name: "Today" }));
+  const homeClass = screen.getByRole("combobox", { name: "Travel class" });
+  expect(homeClass).toHaveDisplayValue("All classes");
+  expect(within(homeClass).getByRole("option", { name: "Sleeper (SL)" })).toBeInTheDocument();
+  fireEvent.change(homeClass, { target: { value: "CC" } });
   fireEvent.click(screen.getByRole("button", { name: "Find my train" }));
 
   expect(await screen.findByRole("heading", { name: "Bhopal - Indore Express" })).toBeInTheDocument();
@@ -104,6 +116,24 @@ it("searches the selected stations and date and shows the provider's timetable",
   expect(await screen.findByRole("table")).toBeInTheDocument();
   expect(fetchRailway.mock.calls.filter(([path]) => path === timetablePath)).toHaveLength(1);
 
+  expect(fetchRailway.mock.calls.some(([path]) => path.includes("/availability?"))).toBe(false);
+  const chairCar = screen.getByRole("button", { name: "Refresh AC Chair Car (CC) availability" });
+  expect(screen.getAllByRole("button", { name: /^Refresh / })[0]).toBe(chairCar);
+  expect(screen.queryByRole("button", { name: "Refresh First AC (1A) availability" })).not.toBeInTheDocument();
+  fireEvent.click(chairCar);
+  expect((await screen.findByText("Available · 9")).closest("li")).toHaveAttribute("data-tone", "green");
+  expect(screen.getByText("₹900 quoted fare")).toBeInTheDocument();
+  expect(fetchRailway).toHaveBeenCalledWith(
+    `/api/v1/trains/19304/availability?from=UJN&to=INDB&date=${format(new Date(), "yyyy-MM-dd")}&class=CC&quota=GN`,
+    { cache: "no-store" },
+  );
+  fireEvent.click(chairCar);
+  expect(await screen.findByText("Available · 8")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Refresh AC 3 Tier (3A) availability" }));
+  expect((await screen.findByText("RAC")).closest("li")).toHaveAttribute("data-tone", "yellow");
+  fireEvent.click(screen.getByRole("button", { name: "Refresh Sleeper (SL) availability" }));
+  expect((await screen.findByText("Waitlisted")).closest("li")).toHaveAttribute("data-tone", "red");
+
   fireEvent.click(screen.getByRole("button", { name: "Plan a connecting trip" }));
   expect(screen.getByRole("spinbutton", { name: /Maximum budget/ })).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Depart after (IST)"), { target: { value: "12:30" } });
@@ -114,6 +144,17 @@ it("searches the selected stations and date and shows the provider's timetable",
     method: "POST",
     body: JSON.stringify({ source: "UJN", destination: "INDB", date: format(new Date(), "yyyy-MM-dd"), departAfter: "12:30", maxTransfers: 2, avoidTransfers: ["BPL"] }),
   }));
+
+  const connection = within(screen.getByRole("article"));
+  const legSeats = within(connection.getAllByRole("region", { name: "Seat availability" })[1]!);
+  expect(legSeats.queryByRole("button", { name: "Refresh AC Chair Car (CC) availability" })).not.toBeInTheDocument();
+  fireEvent.change(legSeats.getByLabelText("Quota"), { target: { value: "TQ" } });
+  fireEvent.click(legSeats.getByRole("button", { name: "Refresh AC 3 Tier (3A) availability" }));
+  expect(await legSeats.findByText("Available · 9")).toBeInTheDocument();
+  expect(fetchRailway).toHaveBeenCalledWith(
+    "/api/v1/trains/22984/availability?from=DWX&to=INDB&date=2026-11-21&class=3A&quota=TQ",
+    { cache: "no-store" },
+  );
 
   fireEvent.click(screen.getByRole("button", { name: "Ask Daddy AI" }));
   const assistant = within(await screen.findByRole("dialog", { name: "Ask Daddy AI" }));
@@ -147,4 +188,5 @@ it("searches the selected stations and date and shows the provider's timetable",
   fireEvent.click(screen.getByRole("link", { name: "Edit search" }));
   expect(await screen.findByRole("combobox", { name: "From" })).toHaveValue("Ujjain Jn (UJN)");
   expect(screen.getByRole("combobox", { name: "To" })).toHaveValue("Indore Junction");
+  expect(screen.getByRole("combobox", { name: "Travel class" })).toHaveValue("CC");
 });

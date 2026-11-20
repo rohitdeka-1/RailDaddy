@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { ArrowDownUp, ArrowUpRight, CalendarDays, MapPin, Menu, Sparkles, TrainFront, AlertCircle, X, History, ChevronDown, ShieldCheck, RotateCcw, Send } from "lucide-react";
+import { Armchair, ArrowDownUp, ArrowUpRight, CalendarDays, MapPin, Menu, Sparkles, TrainFront, AlertCircle, X, History, ChevronDown, ShieldCheck, RotateCcw, Send } from "lucide-react";
 import { addDays, format, isSameDay, isValid, parseISO, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DatePanel } from "@/components/date-panel";
@@ -18,14 +18,15 @@ import { CityMarquee } from "@/components/city-marquee";
 import { useBookingTransition } from "@/components/booking-motion";
 import { ThemeToggle } from "@/components/global-polish";
 import { profileQuery } from "@/lib/auth";
-import { parseTrip } from "@/lib/trip";
+import { parseTravelClass, parseTrip, travelClasses, type TravelClass } from "@/lib/trip";
 import { findStation, popularStationNames, stationCodeFor, stationLabel, stationSearchQuery, stationSuggestions, type Station } from "@/lib/railway";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): { from?: string; to?: string; date?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { from?: string; to?: string; date?: string; travelClass?: TravelClass | undefined } => ({
     ...(typeof search["from"] === "string" && { from: search["from"].slice(0, 100) }),
     ...(typeof search["to"] === "string" && { to: search["to"].slice(0, 100) }),
     ...(typeof search["date"] === "string" && { date: search["date"] }),
+    travelClass: parseTravelClass(search["travelClass"]),
   }),
   head: () => ({ links: [
     { rel: "preload", as: "image", href: heroJpg, type: "image/jpeg", fetchPriority: "high" },
@@ -253,6 +254,7 @@ function Index() {
   }, []);
   const [source, setSource] = useState(editSearch.from ?? "");
   const [destination, setDestination] = useState(editSearch.to ?? "");
+  const [travelClass, setTravelClass] = useState(editSearch.travelClass);
   const compactCard = useCompactSearchCard();
   const today = startOfDay(new Date());
   const tomorrow = startOfDay(addDays(new Date(), 1));
@@ -282,13 +284,15 @@ function Index() {
   const reduced = useReducedMotion();
   const { swapNames, leaveSearch } = useSearchMicroMotion(homeRef, swapTurns, validationAttempt);
   const [recent, setRecent] = useState<string[]>([]);
-  const [lastSearch, setLastSearch] = useState<{ from: string; to: string; date: string } | null>(null);
+  const [lastSearch, setLastSearch] = useState<{ from: string; to: string; date: string; travelClass?: TravelClass | undefined } | null>(null);
   useEffect(() => {
     try {
       const r = JSON.parse(window.localStorage.getItem("rd-recent-stations") ?? "[]");
       if (Array.isArray(r)) setRecent(r.filter((x) => typeof x === "string").slice(0, 5));
       const l = JSON.parse(window.localStorage.getItem("rd-last-search") ?? "null");
-      if (l && typeof l.from === "string" && typeof l.to === "string" && typeof l.date === "string") setLastSearch(l);
+      if (l && typeof l.from === "string" && typeof l.to === "string" && typeof l.date === "string") {
+        setLastSearch({ from: l.from, to: l.to, date: l.date, travelClass: parseTravelClass(l.travelClass) });
+      }
     } catch { /* ignore corrupt storage */ }
   }, []);
   const navigate = useNavigate();
@@ -312,9 +316,9 @@ function Index() {
     setSubmitting(true);
     const nextRecent = [destination.trim(), source.trim(), ...recent.filter((r) => r !== source.trim() && r !== destination.trim())].slice(0, 5);
     setRecent(nextRecent);
-    const search = { from: source.trim(), to: destination.trim(), date: format(date, "yyyy-MM-dd") };
+    const search = { from: source.trim(), to: destination.trim(), date: format(date, "yyyy-MM-dd"), travelClass };
     try { window.localStorage.setItem("rd-recent-stations", JSON.stringify(nextRecent)); window.localStorage.setItem("rd-last-search", JSON.stringify(search)); } catch { /* storage unavailable */ }
-    const tripSearch = parseTrip({ from, to, date: search.date });
+    const tripSearch = parseTrip({ from, to, date: search.date, travelClass });
     await leaveSearch();
     const consoleElement = homeRef.current?.querySelector<HTMLElement>('.booking-console');
     if (consoleElement) {
@@ -382,7 +386,7 @@ function Index() {
           </div>
 
           <div className="booking-area" id="booking">
-            <div className="booking-intro reveal" style={{ ["--d" as string]: "550ms" }}><span><span className="mini-track" /> Start with the route. We'll find the trains.</span>{lastSearch ? <button type="button" className="last-search" aria-label={`Repeat last search: ${shortName(lastSearch.from)} to ${shortName(lastSearch.to)}`} onClick={() => { setSource(lastSearch.from); setDestination(lastSearch.to); const d = parseISO(lastSearch.date); if (!Number.isNaN(d.getTime()) && d >= startOfDay(new Date())) setDate(startOfDay(d)); }}><History size={14} aria-hidden="true" /><span className="last-search-label">Last search</span> {shortName(lastSearch.from)} to {shortName(lastSearch.to)}{lastSearch.date && !Number.isNaN(parseISO(lastSearch.date).getTime()) ? `, ${format(parseISO(lastSearch.date), "EEE")}` : ""}</button> : <span className="booking-step">01 <span>/ ROUTE BASICS</span></span>}</div>
+            <div className="booking-intro reveal" style={{ ["--d" as string]: "550ms" }}><span><span className="mini-track" /> Start with the route. We'll find the trains.</span>{lastSearch ? <button type="button" className="last-search" aria-label={`Repeat last search: ${shortName(lastSearch.from)} to ${shortName(lastSearch.to)}`} onClick={() => { setSource(lastSearch.from); setDestination(lastSearch.to); setTravelClass(lastSearch.travelClass); const d = parseISO(lastSearch.date); if (!Number.isNaN(d.getTime()) && d >= startOfDay(new Date())) setDate(startOfDay(d)); }}><History size={14} aria-hidden="true" /><span className="last-search-label">Last search</span> {shortName(lastSearch.from)} to {shortName(lastSearch.to)}{lastSearch.date && !Number.isNaN(parseISO(lastSearch.date).getTime()) ? `, ${format(parseISO(lastSearch.date), "EEE")}` : ""}</button> : <span className="booking-step">01 <span>/ ROUTE BASICS</span></span>}</div>
             <form onSubmit={submit} data-mode={cardMode} className={`booking-console${submitting ? " search-submitting" : ""}`} aria-busy={submitting}>
               <span className="booking-landing-surface" aria-hidden="true" />
               <span className="booking-landing-shadow" aria-hidden="true" />
@@ -433,6 +437,14 @@ function Index() {
                 <button type="button" className={date && isSameDay(date, tomorrow) ? "on" : ""} aria-pressed={!!date && isSameDay(date, tomorrow)} onClick={() => setDate(tomorrow)}>Tomorrow</button>
               </span>
               </div>
+              <label className="home-travel-class">
+                <span className="field-label"><Armchair size={15} aria-hidden="true" /> <span>Travel class</span></span>
+                <select name="travelClass" value={travelClass ?? ""} onChange={(event) => setTravelClass(parseTravelClass(event.target.value))}>
+                  <option value="">All classes</option>
+                  {Object.entries(travelClasses).map(([code, label]) => <option key={code} value={code}>{label} ({code})</option>)}
+                </select>
+                <ChevronDown size={16} aria-hidden="true" />
+              </label>
               </div>
              <span className="sr-only" role="status">{fieldErrors && Object.values(fieldErrors).filter(Boolean).join(" ")}</span>
              <div className="booking-controls reveal" style={{ ["--d" as string]: "870ms" }}>

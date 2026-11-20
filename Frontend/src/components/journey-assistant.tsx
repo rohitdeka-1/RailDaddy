@@ -8,7 +8,7 @@ import { tripDateLabel } from "@/lib/trip";
 
 const quickAnswers = [
   { question: "How do I find a connection?", answer: "Search your route and date, then open Plan a connecting trip. Choose your departure or arrival time, how many changes you can make, and any stations where you want to avoid changing." },
-  { question: "Can I check seats and fares?", answer: "Use the authorized booking channel to check the fare and seat availability for each train, boarding station, destination, and date. This planner currently has timetable access." },
+  { question: "Can I check seats and fares?", answer: "Choose a quota, then press Refresh on a class tile on the train or connection leg. The tile shows the reported seat status and any fare RailCore quotes. Confirm availability with the authorized booking channel before buying." },
   { question: "Do I need separate tickets?", answer: "Connecting trains may require a separate ticket for each leg. Check each leg before you buy and leave enough time to change trains, especially if the next train leaves from a different station." },
 ];
 

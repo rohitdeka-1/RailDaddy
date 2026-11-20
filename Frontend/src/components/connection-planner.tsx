@@ -2,15 +2,16 @@ import { useMutation } from "@tanstack/react-query";
 import { Clock, GitBranch, TrainFront } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { SeatAvailability } from "@/components/seat-availability";
 import { postJourney, type ConnectionPlan, type JourneyFilters, type JourneyTrip } from "@/lib/railway";
-import { tripDateLabel } from "@/lib/trip";
+import { tripDateLabel, type TravelClass } from "@/lib/trip";
 
 function duration(minutes: number) {
   const hours = Math.floor(minutes / 60);
   return hours ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
 }
 
-export function ConnectionPlanner({ trip }: { trip: JourneyTrip }) {
+export function ConnectionPlanner({ trip, preferredClass }: { trip: JourneyTrip; preferredClass?: TravelClass | undefined }) {
   const titleId = useId();
   const [filterError, setFilterError] = useState("");
   const search = useMutation({
@@ -48,12 +49,11 @@ export function ConnectionPlanner({ trip }: { trip: JourneyTrip }) {
           <label>Arrive before (IST)<input name="arriveBefore" type="time" /></label>
           <label>Maximum transfers<select name="maxTransfers" defaultValue="2"><option value="1">1 transfer</option><option value="2">2 transfers</option></select></label>
           <label>Avoid transfers at<input name="avoidTransfers" placeholder="e.g. MTJ, BKI" maxLength={110} aria-invalid={Boolean(filterError)} /></label>
-          <label>Maximum budget (₹)<input type="number" placeholder="Fare access required" disabled /></label>
+          <label>Maximum budget (₹)<input type="number" placeholder="Check fares per leg below" disabled /></label>
         </div>
         {filterError && <p role="alert" className="flow-sub">{filterError}</p>}
         <div className="planner-actions">
           <Button variant="journey" type="submit" disabled={search.isPending}>{search.isPending ? "Finding connections…" : "Find connections"}</Button>
-          <p className="flow-sub">Fare and seat checks require a RailRadar plan upgrade.</p>
         </div>
       </form>
       {search.isError && <p role="alert" className="flow-sub">{search.error.message}</p>}
@@ -61,15 +61,15 @@ export function ConnectionPlanner({ trip }: { trip: JourneyTrip }) {
         <div className="planner-results">
           <p role="status" className="flow-sub">{plans.length === 0
             ? "No connecting routes matched. Try broadening your filters or changing the travel date."
-            : `${plans.length} ${plans.length === 1 ? "connection" : "connections"} found. Check seats for each leg with the booking provider.`}</p>
-          {plans.map((plan) => <PlanCard key={plan.legs.map(({ train, from, to }) => `${train.number}-${from.code}-${from.date}-${from.departure}-${to.code}`).join("/")} plan={plan} />)}
+            : `${plans.length} ${plans.length === 1 ? "connection" : "connections"} found. Check seats on each leg before booking.`}</p>
+          {plans.map((plan) => <PlanCard key={plan.legs.map(({ train, from, to }) => `${train.number}-${from.code}-${from.date}-${from.departure}-${to.code}`).join("/")} plan={plan} preferredClass={preferredClass} />)}
         </div>
       )}
     </section>
   );
 }
 
-function PlanCard({ plan }: { plan: ConnectionPlan }) {
+function PlanCard({ plan, preferredClass }: { plan: ConnectionPlan; preferredClass?: TravelClass | undefined }) {
   return (
     <article className="planner-itinerary">
       <h3>{plan.legs.length - 1} {plan.legs.length === 2 ? "transfer" : "transfers"} · {duration(plan.totalDurationMinutes)} total</h3>
@@ -91,6 +91,8 @@ function PlanCard({ plan }: { plan: ConnectionPlan }) {
                   <span>{leg.from.name} ({leg.from.code}) <b>{leg.from.departure} · {tripDateLabel(leg.from.date)}</b></span>
                   <span>{leg.to.name} ({leg.to.code}) <b>{leg.to.arrival} · {tripDateLabel(leg.to.date)}</b></span>
                 </div>
+                <SeatAvailability train={leg.train.number} from={leg.from.code} to={leg.to.code} date={leg.from.date}
+                  preferredClass={preferredClass} offeredClasses={leg.train.classes} />
               </div>
             </li>
           );

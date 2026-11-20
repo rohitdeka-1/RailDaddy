@@ -1,11 +1,30 @@
 import { addDays, format, parseISO, isValid } from "date-fns";
 
+export const travelClasses = {
+  "1A": "First AC",
+  "2A": "AC 2 Tier",
+  "3A": "AC 3 Tier",
+  "3E": "AC 3 Tier Economy",
+  SL: "Sleeper",
+  CC: "AC Chair Car",
+  EC: "Executive Chair Car",
+  "2S": "Second Sitting",
+  FC: "First Class",
+} as const;
+
+export type TravelClass = keyof typeof travelClasses;
+
+export function parseTravelClass(value: unknown): TravelClass | undefined {
+  return typeof value === "string" && Object.hasOwn(travelClasses, value) ? value as TravelClass : undefined;
+}
+
 /** Trip details carried between the post-search screens via URL search params. */
 export type Trip = {
   from: string;
   to: string;
   date: string; // yyyy-MM-dd
   cls: string;
+  travelClass?: TravelClass | undefined;
   pax: number;
   train?: string | undefined;
 };
@@ -22,6 +41,7 @@ export function parseTrip(s: Record<string, unknown>): Trip {
     to: str(s["to"], "Jaipur"),
     date: isValid(parseISO(date)) ? date : format(addDays(new Date(), 1), "yyyy-MM-dd"),
     cls: ["SL", "3A", "2A", "1A"].includes(str(s["cls"])) ? str(s["cls"]) : "3A",
+    travelClass: parseTravelClass(s["travelClass"]),
     pax: Number.isInteger(pax) && pax >= 1 && pax <= MAX_PASSENGERS ? pax : 1,
     train: str(s["train"]) || undefined,
   };

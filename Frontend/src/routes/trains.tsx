@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ChevronDown, GitBranch, Sparkles, TrainFront } from "lucide-react";
@@ -7,10 +7,11 @@ import { TrainSkeletons, useBookingReducedMotion } from "@/components/booking-mo
 import { BookingShell } from "@/components/booking-shell";
 import { ConnectionPlanner } from "@/components/connection-planner";
 import { JourneyAssistant } from "@/components/journey-assistant";
+import { SeatAvailability } from "@/components/seat-availability";
 import { Button } from "@/components/ui/button";
 import { bookingMotion, motionTokens } from "@/lib/motion";
-import { findStation, stationCodeFor, stationLabel, trainSearchQuery, trainTimetableQuery, type ScheduledTrain } from "@/lib/railway";
-import { parseTrip, tripDateLabel } from "@/lib/trip";
+import { findStation, stationCodeFor, stationLabel, trainSearchQuery, trainTimetableQuery, type ScheduledTrain, type TrainTimetable } from "@/lib/railway";
+import { parseTrip, travelClasses, tripDateLabel, type TravelClass } from "@/lib/trip";
 
 export const Route = createFileRoute("/trains")({
   validateSearch: parseTrip,
@@ -46,6 +47,7 @@ function Results() {
     from: results ? stationLabel(results.from) : summary.from,
     to: results ? stationLabel(results.to) : summary.to,
     date: trip.date,
+    travelClass: trip.travelClass,
   };
 
   return (
@@ -53,7 +55,9 @@ function Results() {
       <div className="results-toolbar">
         <div className="flow-title-row">
           <h1 className="flow-title">{results ? `${results.trains.length} direct ${results.trains.length === 1 ? "train" : "trains"}` : "Direct trains"} · {tripDateLabel(trip.date)}</h1>
-          <p className="flow-sub">Scheduled times are in IST. Fares and seat availability are unavailable.</p>
+          <p className="flow-sub">Scheduled times are in IST. {trip.travelClass
+            ? `Preferred class: ${travelClasses[trip.travelClass]} (${trip.travelClass}).`
+            : "Refresh a class to check seat availability."}</p>
         </div>
         <Button variant="outline" onClick={() => setAssistantOpen(true)} aria-haspopup="dialog"><Sparkles size={16} /> Ask Daddy AI</Button>
       </div>
@@ -64,7 +68,7 @@ function Results() {
           <Button type="button" variant="outline" aria-expanded={showPlanner} aria-controls="connection-planner"
             onClick={() => setPlannerOverride(!showPlanner)}><GitBranch size={16} />{showPlanner ? "Hide connection planner" : "Plan a connecting trip"}</Button>
           <div id="connection-planner" hidden={!showPlanner}>
-            {showPlanner && <ConnectionPlanner key={`${source}/${destination}/${trip.date}`} trip={plannerTrip} />}
+            {showPlanner && <ConnectionPlanner key={`${source}/${destination}/${trip.date}/${trip.travelClass ?? ""}`} trip={plannerTrip} preferredClass={trip.travelClass} />}
           </div>
         </div>
       )}
@@ -80,7 +84,7 @@ function Results() {
       ) : results?.trains.length ? (
         <motion.ul className="train-list" aria-label="Scheduled trains" initial={{ opacity: reduced ? 1 : 0 }} animate={{ opacity: 1 }} transition={{ duration: reduced ? 0 : motionTokens.duration.standard }}>
           {results.trains.map((result, index) => (
-            <TrainCard key={`${result.train.number}-${result.from.departure}`} result={result} index={index} reduced={reduced} />
+            <TrainCard key={`${result.train.number}-${result.from.code}-${result.to.code}-${result.from.departure}-${trip.date}-${trip.travelClass ?? ""}`} result={result} date={trip.date} preferredClass={trip.travelClass} index={index} reduced={reduced} />
           ))}
         </motion.ul>
       ) : null}
@@ -88,9 +92,12 @@ function Results() {
   );
 }
 
-function TrainCard({ result, index, reduced }: { result: ScheduledTrain; index: number; reduced: boolean }) {
+function TrainCard({ result, date, preferredClass, index, reduced }: {
+  result: ScheduledTrain; date: string; preferredClass?: TravelClass | undefined; index: number; reduced: boolean;
+}) {
   const { train, from, to, duration, totalHaltsBetween } = result;
   const [showStops, setShowStops] = useState(false);
+  const timetable = useQuery({ ...trainTimetableQuery(train.number), enabled: showStops });
   const stopsId = useId();
   const arrivalOffset = to.day - from.day;
   const durationLabel = duration >= 60 ? `${Math.floor(duration / 60)}h ${duration % 60}m` : `${duration}m`;
@@ -115,15 +122,16 @@ function TrainCard({ result, index, reduced }: { result: ScheduledTrain; index: 
         {showStops ? "Hide stops" : "View stops"} <ChevronDown size={16} aria-hidden="true" />
       </Button>
       <div id={stopsId} hidden={!showStops}>
-        {showStops && <JourneyStops result={result} />}
+        {showStops && <JourneyStops result={result} timetable={timetable} />}
       </div>
+      <SeatAvailability train={train.number} from={from.code} to={to.code} date={date} preferredClass={preferredClass}
+        offeredClasses={timetable.data?.offeredClasses ?? train.classes} />
     </motion.li>
   );
 }
 
-function JourneyStops({ result }: { result: ScheduledTrain }) {
-  const { train, from, to } = result;
-  const timetable = useQuery(trainTimetableQuery(train.number));
+function JourneyStops({ result, timetable }: { result: ScheduledTrain; timetable: UseQueryResult<TrainTimetable> }) {
+  const { from, to } = result;
   if (timetable.isPending) return <p className="flow-sub" role="status">Loading scheduled stops…</p>;
   if (!timetable.data) return (
     <div>
@@ -132,7 +140,7 @@ function JourneyStops({ result }: { result: ScheduledTrain }) {
     </div>
   );
 
-  const route = timetable.data;
+  const { route } = timetable.data;
   const boarding = route.findIndex((stop) => stop.sequence === from.sequence && stop.station.code === from.code);
   const destination = route.findIndex((stop) => stop.sequence === to.sequence && stop.station.code === to.code);
   if (boarding < 0 || destination <= boarding) {

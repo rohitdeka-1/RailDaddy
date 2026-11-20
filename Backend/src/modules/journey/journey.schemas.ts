@@ -27,7 +27,7 @@ export const journeyPlanSchema = journeyEndpoints.extend({
 const stop = z.object({ code: z.string(), name: z.string(), date: z.iso.date() });
 const itinerary = z.object({
   legs: z.array(z.object({
-    train: z.object({ number: z.string(), name: z.string() }),
+    train: z.object({ number: z.string(), name: z.string(), classes: z.array(z.string()).nullish().transform((classes) => classes ?? undefined) }),
     from: stop.extend({ departure: clockTime }),
     to: stop.extend({ arrival: clockTime }),
   })).min(2),

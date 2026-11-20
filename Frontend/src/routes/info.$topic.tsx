@@ -17,7 +17,7 @@ const topics: Record<string, Topic> = {
     points: [
       { heading: "What Rail Daddy does", body: "Searches direct trains between two stations on your travel date and shows departure times, arrival times and journey durations." },
       { heading: "What Rail Daddy is not", body: "We are not Indian Railways. Tickets are issued, confirmed and cancelled through authorized Indian Railways channels." },
-      { heading: "Seat availability and fares", body: "Check the authorized booking channel for fares, seat availability and tickets." },
+      { heading: "Seat availability and fares", body: "Press Refresh on a class tile to see RailCore's seat report and quoted fare for the selected quota. Use the authorized booking channel to buy tickets." },
     ],
     closing: "Ready to look at trains? Head back to the search.",
   },
